@@ -17,7 +17,7 @@ public:
     Biquad(double peakGainDB, double Fc, double Q);
     ~Biquad();
     double process(int channel, double signal);
-//    double processR(double signal);
+
 private:
     int type;
     double a0, a1, a2, b1, b2;
@@ -26,10 +26,8 @@ private:
     double gain = 1;
     double signal = 0;
     double output = 0;
-    std::vector<std::vector<std::vector<int> > > channelBuffer;
-//    std::vector<double> bufferX = {0, 0, 0};
-//    std::vector<double> bufferY = {0, 0, 0};
-//    std::vector<std::vector<double>> biquadBuffers = {bufferX, bufferY};
+    std::vector<std::vector<std::vector<double> > > channelBuffer;
+
 };
 
 

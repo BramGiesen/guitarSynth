@@ -172,10 +172,10 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
         float  signalR = buffer.getSample(1, sample);
         float  signalL = buffer.getSample(0, sample);
 //        std::cout << "signalR voor = " << signalR << std::endl;
-        float filterSignalL = bandpass175->processL(signalL);
-        float filterSignalR = bandpass175->processR(signalL);
-        float filterSignal1L = bandpass220->processL(signalR);
-        float filterSignal1R = bandpass220->processR(signalR);
+        float filterSignalL = bandpass175->process(0, signalL);
+        float filterSignalR = bandpass175->process(1, signalR);
+//        float filterSignal1L = bandpass220->processL(signalR);
+//        float filterSignal1R = bandpass220->processR(signalR);
 //        std::cout << "signalR na = " << filterSignalR << std::endl;
         
 //        float filterSignal1L = bandpass1L.process(signalL);

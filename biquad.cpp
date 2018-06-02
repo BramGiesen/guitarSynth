@@ -10,10 +10,8 @@
 #include <math.h>
 
 
-Biquad::Biquad(double peakGainDB, double Fc, double Q)
+Biquad::Biquad(double peakGainDB, double Fc, double Q) : channelBuffer(3, std::vector<std::vector<double> > (3, std::vector<double>(3,0)))
 {
-    std::vector<std::vector<std::vector<int> > > channelBuffer(2, std::vector<std::vector<int> > (2, std::vector<int>(3,0)));
-    
     double norm;
     double K = tan(M_PI * Fc);
     norm = 1 / (1 + K / Q + K * K);
@@ -32,19 +30,20 @@ Biquad::~Biquad()
 double Biquad::process(int channel, double input)
 {
     
-    channelBuffer[channel][0][0] = input;
-    
-    channelBuffer[channel][1][0] = a0 * channelBuffer[channel][0][0] + a1 * channelBuffer[channel][0][1] + a2 * channelBuffer[channel][0][2] - b1 * channelBuffer[channel][1][1] - b2 *  channelBuffer[channel][1][2];
-    
-    
-    for(int index = 0 ; index < 2 ; index++){
-        for (int bufferSize = 2; bufferSize >=1; bufferSize--){
-            channelBuffer[channel][index][bufferSize] = channelBuffer[channel][index][bufferSize-1];
-        }
-    }
-    
-    
+//    channelBuffer[channel][0][0] = input;
+//    
+//    channelBuffer[channel][1][0] = a0 * channelBuffer[channel][0][0] + a1 * channelBuffer[channel][0][1] + a2 * channelBuffer[channel][0][2] - b1 * channelBuffer[channel][1][1] - b2 *  channelBuffer[channel][1][2];
+//    
+//    
+//    for(int index = 0 ; index < 2 ; index++){
+//        for (int bufferSize = 2; bufferSize >=1; bufferSize--){
+//            channelBuffer[channel][index][bufferSize] = channelBuffer[channel][index][bufferSize-1];
+//        }
+//    }
+//    
+//    
     return channelBuffer[channel][1][0];
+    return 0;
 }
 
 
