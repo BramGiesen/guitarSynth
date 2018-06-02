@@ -25,14 +25,12 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
 #endif
 {
     addParameter (waveFormParam = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
+    
+    
 }
 
 GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
 {
-    delete bandpass175;
-    bandpass175 = nullptr;
-    delete bandpass220;
-    bandpass220 = nullptr;
     
 }
 
@@ -103,15 +101,12 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
 {
     lastSampleRate = sampleRate;
     
+    bandPassFilters = new Biquad*[15];
     
-//    bandpass1L.setCoefs(0.755232, 0.,  -0.755232, 0.073769, 0.767621);
-//    bandpass1R.setCoefs(0.755232, 0.,  -0.755232, 0.073769, 0.767621);
-//    bandpassL.setCoefs(0.007484, 0., -0.007484, -1.996055, 0.996258);
-//    bandpassR.setCoefs(0.007484, 0., -0.007484, -1.996055, 0.996258);
+    for (int i = 0; i < 15; i++){
+        bandPassFilters[i] = new Biquad(1.0, filterFreqs[i] / lastSampleRate, 40.0);
+    }
     
-//    bandpassL->calcBandPass(1, 220, 40);
-//    bandpassR->calcBandPass(1, 220, 40);
- 
     
 }
 
@@ -162,47 +157,22 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
         buffer.clear (i, 0, buffer.getNumSamples());
 
     
-    //    TODO: check if it is stereo or mono
-    
     for(int sample = 0; sample < buffer.getNumSamples(); ++sample){
         
-        
-        auto channelDataL = buffer.getWritePointer (0);
-        auto channelDataR = buffer.getWritePointer (1);
-        float  signalR = buffer.getSample(1, sample);
-        float  signalL = buffer.getSample(0, sample);
-//        std::cout << "signalR voor = " << signalR << std::endl;
-        float filterSignalL = bandpass175->process(0, signalL);
-        float filterSignalR = bandpass175->process(1, signalR);
-//        float filterSignal1L = bandpass220->processL(signalR);
-//        float filterSignal1R = bandpass220->processR(signalR);
-//        std::cout << "signalR na = " << filterSignalR << std::endl;
-        
-//        float filterSignal1L = bandpass1L.process(signalL);
-//        float filterSignal1R = bandpass1R.process(signalR);
-        
-//        channelDataL[sample] = filterSignalL + filterSignal1L;
-//        channelDataR[sample] = filterSignalR + filterSignal1R ;
-        
-        channelDataL[sample] = filterSignalL;
-        channelDataR[sample] = filterSignalR;
-
-        
+        for (int channel = 0; channel< totalNumInputChannels; ++channel)
+        {
+            auto channelData = buffer.getWritePointer (channel);
+            float  signal = buffer.getSample(channel, sample);
+            
+                for (int filterIndex = 0; filterIndex < 15; filterIndex++){
+                    float filterSignal = bandPassFilters[filterIndex]->process(channel, signal);
+                    addedfilterSignal = filterSignal + addedfilterSignal;
+                }
+            
+        channelData[sample] = addedfilterSignal;
+     
         }
-    
-    
-    
-    
-    
-    
-    
-    
-//    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-//    {
-//        float* channelData = buffer.getWritePointer (channel);
-//
-//        // ..do something to the data...
-//    }
+    }
 }
 
 //==============================================================================

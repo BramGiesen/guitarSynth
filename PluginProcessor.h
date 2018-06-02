@@ -62,20 +62,11 @@ public:
 
     AudioParameterChoice* waveFormParam;
 private:
-    Biquad *bandpass175 = new Biquad(1.0, 174.0 / 44100.0, 40.0);
-    Biquad *bandpass220 = new Biquad(1.0, 220.0 / 44100.0, 40.0);
-    Biquad *bandpass265 = new Biquad(1.9, 265.0 / 44100.0, 40.0);
-   
+    Biquad **bandPassFilters;
+    std::vector<double> filterFreqs = {175.0,220.0,265.0,345.0,550.0,700.0,880.0,1000.0, 1100.0, 1400.0, 1750.0,2300.0,2950.0, 3500.0, 4300.0};
     
-   
-//
-//    Biquad bandpassL(1, 220, 40);
-//    Biquad bandpassR(1, 220, 40);
-//    Biquad bandpass1L(1, 265, 40);
-//    Biquad bandpass1R(1, 265, 40);
-    
-    
-    float lastSampleRate;
+    float addedfilterSignal;
+    double lastSampleRate;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarSynth_2AudioProcessor)
 };
