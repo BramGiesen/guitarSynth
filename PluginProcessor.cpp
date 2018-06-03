@@ -31,7 +31,8 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
 
 GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
 {
-    
+    delete sin;
+    sin = nullptr;
 }
 
 //==============================================================================
