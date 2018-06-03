@@ -15,5 +15,5 @@ Hierbij worden er dus per kanaal twee buffer lijsten in de vector gezet. Ik werk
 ###### envelope follower:
 
 <img src="images/envelope_detection_fig2_11007.jpg">
-Dit is het systeem dat heb gebruikt voor mijn envelope follower. De absolute value bereken ik door de absolute waarde te pakken van het inkomende signaal over een x aantal samples. Als alle waarden bij elkaar zijn opgeteld deel het ik weer door x.
+Dit is het systeem dat heb gebruikt voor mijn envelope follower. Het artikel is <a href="https://www.dsprelated.com/showarticle/938.php">hier</a> te lezen. De absolute value bereken ik door de absolute waarde te pakken van het inkomende signaal over een x aantal samples. Als alle waarden bij elkaar zijn opgeteld deel het ik weer door x.
 Dit gaat vervolgens door een one pole lowpass filter heen.

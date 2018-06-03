@@ -9,7 +9,7 @@
 #include <iostream>
 #include <math.h>
 
-
+//make the constructor of the vector more flexible.
 Biquad::Biquad(double peakGainDB, double Fc, double Q) : channelBuffer(2, std::vector<std::vector<double> > (2, std::vector<double>(3,0)))
 {
     double norm;
