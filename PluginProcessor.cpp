@@ -164,15 +164,19 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             auto channelData = buffer.getWritePointer (channel);
             float  signal = buffer.getSample(channel, sample);
             
+            //envelope follower
             float amp = envFollow.process(signal);
-            std::cout << "amp = " << amp << std::endl;
+            
+            float sinus = sin->getSample();
+            sin->tick();
             
                 for (int filterIndex = 0; filterIndex < 15; filterIndex++){
                     float filterSignal = bandPassFilters[filterIndex]->process(channel, signal);
                     addedfilterSignal = filterSignal + addedfilterSignal;
                 }
             
-        channelData[sample] = addedfilterSignal;
+//            channelData[sample] = addedfilterSignal;
+            channelData[sample] = sinus * amp;
      
         }
     }

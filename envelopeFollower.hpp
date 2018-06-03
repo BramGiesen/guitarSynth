@@ -21,7 +21,7 @@ public:
 private:
     double signal = 0;
     double envelope;
-    OnePole *lowPass = new OnePole(1.0 / 44100);
+    OnePole *lowPass = new OnePole(10.0 / 44100);
     SignalAverage *svg = new SignalAverage(20);
     
 };
