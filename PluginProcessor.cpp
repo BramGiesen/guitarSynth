@@ -164,6 +164,9 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             auto channelData = buffer.getWritePointer (channel);
             float  signal = buffer.getSample(channel, sample);
             
+            float amp = envFollow.process(signal);
+            std::cout << "amp = " << amp << std::endl;
+            
                 for (int filterIndex = 0; filterIndex < 15; filterIndex++){
                     float filterSignal = bandPassFilters[filterIndex]->process(channel, signal);
                     addedfilterSignal = filterSignal + addedfilterSignal;
