@@ -169,6 +169,8 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             float amp = envFollow.process(signal);
             
             float sinus = sin->getSample();
+
+            zerox.calculate(sinus);
             sin->tick();
             
                 for (int filterIndex = 0; filterIndex < 15; filterIndex++){
