@@ -17,6 +17,7 @@ public:
     Zerox();
     ~Zerox();
     void calculate(double aSignal);
+    int getZerox();
     
 private:
     double aSignal = 0;
@@ -24,7 +25,7 @@ private:
     double zeroCrossingPerSec = 0;
     double zeroxRate = 0;
     double phase = 0;
-    double zeroxOut = 0;
+    double zeroxOut = 1;
     double count = 0;
     int samplerate = 44100;
     double signalVectorSize = 128;

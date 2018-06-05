@@ -21,7 +21,7 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), envFollowValues(15,0)
 #endif
 {
     addParameter (waveFormParam = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
@@ -102,13 +102,23 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
 {
     lastSampleRate = sampleRate;
     
-    bandPassFilters = new Biquad*[15];
+    oscillators = new Oscillator*[2];
+    oscillators[0] = new SineWave(lastSampleRate, 110, 0);
+    oscillators[1] = new NoiseOscillator();
     
-    for (int i = 0; i < 15; i++){
-        bandPassFilters[i] = new Biquad(1.0, filterFreqs[i] / lastSampleRate, 40.0);
+    bandPassFilters = new Biquad*[30];
+    
+    
+    for (int i = 0; i < 30; i++){
+        bandPassFilters[i] = new Biquad(1.0, filterFreqs[i % 15] / lastSampleRate, 40.0);
     }
-    
-    
+
+    envelopeFollowers = new EnvelopeFollower*[15];
+
+    for (int i = 0; i < 15; i++){
+        envelopeFollowers[i] = new EnvelopeFollower;
+    }
+
 }
 
 void GuitarSynth_2AudioProcessor::updateFilter()
@@ -165,22 +175,28 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             auto channelData = buffer.getWritePointer (channel);
             float  signal = buffer.getSample(channel, sample);
             
-            //envelope follower
-            float amp = envFollow.process(signal);
-            
-            float sinus = sin->getSample();
+            //zerox analysis
+            for (int filterIndex = 0; filterIndex < 15; filterIndex++){
+                filterSignal2 = bandPassFilters[filterIndex]->process(channel, signal);
+                envFollowValues[filterIndex] = envelopeFollowers[filterIndex]->process(filterSignal2);
+            }
 
-            zerox.calculate(sinus);
-            sin->tick();
+            //envelope follower
+            zerox.calculate(signal);
+            int oscIndex = zerox.getZerox() - 1;
+            double synthSample = oscillators[oscIndex]->getSample();
             
-                for (int filterIndex = 0; filterIndex < 15; filterIndex++){
-                    float filterSignal = bandPassFilters[filterIndex]->process(channel, signal);
-                    addedfilterSignal = filterSignal + addedfilterSignal;
-                }
+
+            oscillators[0]->tick();
+            oscillators[1]->tick();
             
-//            channelData[sample] = addedfilterSignal;
-            channelData[sample] = sinus * amp;
-     
+            //Synthsignal + filters and envelope follower
+            for (int filterIndex = 0; filterIndex < 15; filterIndex++){
+                float filterSignal = bandPassFilters[filterIndex + 15]->process(channel, synthSample);
+                addedfilterSignal = (filterSignal * envFollowValues[filterIndex]) + addedfilterSignal;
+            }
+            
+            channelData[sample] = addedfilterSignal;
         }
     }
 }

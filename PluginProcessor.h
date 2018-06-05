@@ -15,7 +15,9 @@
 #include "/Users/BramGiesen/aubio-0.4.5.darwin_framework/aubio.framework/Headers/aubio.h"
 #include "envelopeFollower.hpp"
 #include "sineWave.hpp"
+#include "noiseOscillator.hpp"
 #include "zerox.hpp"
+#include "selector.hpp"
 
 //==============================================================================
 /**
@@ -64,10 +66,20 @@ public:
 
     AudioParameterChoice* waveFormParam;
 private:
-    SineWave *sin =  new SineWave(44100.0, 220.0 , 0.0);
-    EnvelopeFollower envFollow;
+    float filterSignal1 = 0;
+    float filterSignal2 = 0;
+    float firstFilterSignal[15];
+    std::vector<double> envFollowValues;
+    Oscillator **oscillators;
+    std::vector<double> vec = {10,20};
+//    EnvelopeFollower envFollow;
     Zerox zerox;
+    Selector selector;
+    SineWave *sin =  new SineWave(44100.0, 10.0 , 0.0);
     Biquad **bandPassFilters;
+
+    
+    EnvelopeFollower **envelopeFollowers;
     std::vector<double> filterFreqs = {175.0,220.0,265.0,345.0,550.0,700.0,880.0,1000.0, 1100.0, 1400.0, 1750.0,2300.0,2950.0, 3500.0, 4300.0};
     
     float addedfilterSignal;

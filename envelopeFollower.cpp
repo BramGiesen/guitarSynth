@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "envelopeFollower.hpp"
+#include <iostream>
 
 EnvelopeFollower::EnvelopeFollower()
 {
@@ -24,5 +25,5 @@ double EnvelopeFollower::process(double signal)
 {
     svg->calculate(signal);
     envelope = lowPass->process(svg->getAverage());
-    return envelope;
+    return envelope * 4;
 }

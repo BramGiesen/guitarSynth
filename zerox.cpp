@@ -27,9 +27,13 @@ void Zerox::calculate(double aSignal)
         }
         count++;
     } else {
-    zeroxOut = zeroxRate;
-    std::cout << "zeroxout = " << zeroxOut << std::endl;
+    zeroxOut = (zeroxRate >= 2) ? 2 : 1;
     zeroxRate = 0;
     count = 0;
     }
+}
+
+int Zerox::getZerox()
+{
+    return zeroxOut;
 }

@@ -23,6 +23,7 @@ SineWave::~SineWave() {}
 void SineWave::calculate()
 {
     //NOTE sin() method is not the most efficient way to calculate the sine value
-    sample = sin(phase * PI_2 );
+    sinus = sin(phase * PI_2 );
+    sample = (sinus > 0 ) ? 1 : 0;
     //std::cout << "\n" << phase  << "PI_2 " << "\n" ;
 }

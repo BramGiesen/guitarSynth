@@ -26,7 +26,8 @@ public:
     //override calculate
     //this method contains the sample calculation
     void calculate() override;
-    
+private:
+    double sinus = 0;
     
 };
 
