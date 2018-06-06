@@ -103,6 +103,7 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
     lastSampleRate = sampleRate;
     
     oscillators = new Oscillator*[2];
+    
     oscillators[0] = new SineWave(lastSampleRate, 110, 0);
     oscillators[1] = new NoiseOscillator();
     
