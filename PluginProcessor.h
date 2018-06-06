@@ -67,25 +67,28 @@ public:
 
     AudioParameterChoice* waveFormParam;
 private:
+    //variables
     float filterSignal1 = 0;
     float filterSignal2 = 0;
     float firstFilterSignal[15];
-    std::vector<double> envFollowValues;
-    Oscillator **oscillators;
-    std::vector<double> vec = {10,20};
-//    EnvelopeFollower envFollow;
-    Zerox zerox;
-    Selector selector;
-    SineWave *sin =  new SineWave(44100.0, 10.0 , 0.0);
-    Biquad **bandPassFilters;
-    
-    PitchDetect pitch;
-
-    EnvelopeFollower **envelopeFollowers;
-    std::vector<double> filterFreqs = {175.0,220.0,265.0,345.0,550.0,700.0,880.0,1000.0, 1100.0, 1400.0, 1750.0,2300.0,2950.0, 3500.0, 4300.0};
-    
     float addedfilterSignal;
     double lastSampleRate;
+
+    //vevtors
+    std::vector<double> envFollowValues;
+    std::vector<double> filterFreqs = {175.0,220.0,265.0,345.0,550.0,700.0,880.0,1000.0, 1100.0, 1400.0, 1750.0,2300.0,2950.0, 3500.0, 4300.0};
+
+    //objects
+    Zerox zerox;
+    Selector selector;
+    PitchDetect pitch;
+
+    //Object pointers
+    Oscillator **oscillators;
+    Biquad **bandPassFilters;
+    EnvelopeFollower **envelopeFollowers;
+
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarSynth_2AudioProcessor)
 };

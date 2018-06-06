@@ -30,9 +30,15 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
 }
 
 GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
-{
-    delete sin;
-    sin = nullptr;
+{    
+    delete bandPassFilters;
+    bandPassFilters = nullptr;
+    
+    delete envelopeFollowers;
+    envelopeFollowers = nullptr;
+    
+    delete oscillators;
+    oscillators = nullptr;
 }
 
 //==============================================================================
