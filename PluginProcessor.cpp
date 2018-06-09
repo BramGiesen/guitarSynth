@@ -24,6 +24,12 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
                        ), envFollowValues(15,0)
 #endif
 {
+    for(int i = 0; i < lenghtOfAudioBuffer; i++){
+        audioBufferPitch[i] = 0;
+    }
+    PitchDetect pitch(audioBufferPitch);
+    pitcher = &pitch;
+    
     addParameter (waveFormParam = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
     
     
@@ -110,14 +116,15 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
     
     oscillators = new Oscillator*[2];
     
-    oscillators[0] = new SineWave(lastSampleRate, 110, 0);
+    oscillators[0] = new SineWave(lastSampleRate, 220, 0);
     oscillators[1] = new NoiseOscillator();
     
-    bandPassFilters = new Biquad*[30];
+    int numberOfBiquads = 60;
+    bandPassFilters = new Biquad*[numberOfBiquads];
     
     
-    for (int i = 0; i < 30; i++){
-        bandPassFilters[i] = new Biquad(1.0, filterFreqs[i % 15] / lastSampleRate, 40.0);
+    for (int i = 0; i < numberOfBiquads; i++){
+        bandPassFilters[i] = new Biquad(1.0, filterFreqs[i % 15] / lastSampleRate, 46.0);
     }
 
     envelopeFollowers = new EnvelopeFollower*[15];
@@ -181,11 +188,18 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
         {
             auto channelData = buffer.getWritePointer (channel);
             float  signal = buffer.getSample(channel, sample);
-            
             //zerox analysis
+            audioBufferPitch[x++ % lenghtOfAudioBuffer] = buffer.getSample(0, sample);
+            
+            
             for (int filterIndex = 0; filterIndex < 15; filterIndex++){
-                filterSignal2 = bandPassFilters[filterIndex]->process(channel, signal);
-                envFollowValues[filterIndex] = envelopeFollowers[filterIndex]->process(filterSignal2);
+                filterSignal1 = bandPassFilters[filterIndex]->process(channel, signal);
+;
+            }
+
+            for (int filterIndex = 15; filterIndex < 30; filterIndex++){
+                filterSignal2 = bandPassFilters[filterIndex]->process(channel, filterSignal1);
+                envFollowValues[filterIndex-15] = 100 * envelopeFollowers[filterIndex-15]->process(filterSignal2);
             }
 
             //envelope follower
@@ -193,17 +207,29 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             int oscIndex = zerox.getZerox() - 1;
             double synthSample = oscillators[oscIndex]->getSample();
             
-
+//            pitcher->process();
             oscillators[0]->tick();
             oscillators[1]->tick();
             
             //Synthsignal + filters and envelope follower
-            for (int filterIndex = 0; filterIndex < 15; filterIndex++){
-                float filterSignal = bandPassFilters[filterIndex + 15]->process(channel, synthSample);
-                addedfilterSignal = (filterSignal * envFollowValues[filterIndex]) + addedfilterSignal;
+            for (int filterIndex = 30; filterIndex < 45; filterIndex++){
+                float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
+                addedfilterSignal1 = filterSignal + addedfilterSignal1;
+            }
+
+            for (int filterIndex = 45; filterIndex < 60; filterIndex++){
+                float filterSignal = bandPassFilters[filterIndex]->process(channel, addedfilterSignal1);
+                addedfilterSignal2 = (filterSignal * envFollowValues[filterIndex-45]) + addedfilterSignal2;
             }
             
-            channelData[sample] = addedfilterSignal;
+//            for (int filterIndex = 30; filterIndex < 45; filterIndex++){
+//                float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
+//                addedfilterSignal2 = (filterSignal * envFollowValues[filterIndex-30]) + addedfilterSignal2;
+//                }
+            
+            
+            
+            channelData[sample] = addedfilterSignal2;
         }
     }
 }
