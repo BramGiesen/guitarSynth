@@ -55,4 +55,4 @@ Dit gaat vervolgens door een one pole lowpass filter heen.
 Naast het analyse deel en filtering heeft een vocoder ook twee oscillatoren. Als basis heb ik de classes uit van blok csd2c gebruikt. Voor de noise oscillator heb ik de sinus formule vervangen met een random functie om op deze manier ruis te genereren.  
 
 ###### Aubio:
-lastig om aan de praat te krijgen binnen Xcode.
+lastig om aan de praat te krijgen binnen Xcode. Uiteindelijk bleek dat ik het framework via een ander menu moest toevoegen. Op ook wordt er op het moment een pointer naar de audiobuffer van JUCE gegeven. Ik krijg nog wel een BAD EXCES melding, dus ik moet het nu nog gaan debuggen.  
