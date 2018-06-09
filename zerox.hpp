@@ -20,15 +20,15 @@ public:
     int getZerox();
     
 private:
-    double aSignal = 0;
-    double previousSignal = 0;
-    double zeroCrossingPerSec = 0;
-    double zeroxRate = 0;
-    double phase = 0;
-    double zeroxOut = 1;
-    double count = 0;
-    int samplerate = 44100;
-    double signalVectorSize = 128;
+    double aSignal = 0.0;
+    double previousSignal = 0.0;
+    double zeroCrossingPerSec = 0.0;
+    double zeroxRate = 0.0;
+    double phase = 0.0;
+    double zeroxOut = 1.0;
+    double count = 0.0;
+    int samplerate = 44100.0;
+    double signalVectorSize = 128.0;
     int n = 0;
 };
 

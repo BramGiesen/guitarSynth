@@ -32,7 +32,7 @@ void SignalAverage::calculate(double signal)
     }else{
         n = 0;
         averageSignal = addedResult / sampleInterval;
-        addedResult = 0;
+        addedResult = 0.0;
     }
 }
 

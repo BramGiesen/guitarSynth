@@ -19,10 +19,10 @@ public:
     ~EnvelopeFollower();
     double process(double signal);
 private:
-    double signal = 0;
-    double envelope = 0;
-    OnePole *lowPass = new OnePole(10.0 / 44100);
-    SignalAverage *svg = new SignalAverage(20);
+    double signal = 0.0;
+    double envelope = 0.0;
+    OnePole *lowPass = new OnePole(10.0 / 44100.0);
+    SignalAverage *svg = new SignalAverage(20.0);
     
 };
 

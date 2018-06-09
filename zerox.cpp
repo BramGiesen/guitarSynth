@@ -20,15 +20,15 @@ Zerox::~Zerox()
 void Zerox::calculate(double aSignal)
 {
     if(count < signalVectorSize){
-        if((aSignal >= 0 && previousSignal <= 0)||(aSignal <= 0 && previousSignal >= 0))
+        if((aSignal >= 0.0 && previousSignal <= 0.0)||(aSignal <= 0.0 && previousSignal >= 0.0))
         {
-            zeroxRate += 1;
+            zeroxRate += 1.0;
             previousSignal = aSignal;
         }
         count++;
     } else {
-    zeroxOut = (zeroxRate >= 2) ? 2 : 1;
-    zeroxRate = 0;
+    zeroxOut = (zeroxRate >= 2.0) ? 2 : 1;
+    zeroxRate = 0.0;
     count = 0;
     }
 }

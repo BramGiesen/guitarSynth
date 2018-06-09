@@ -20,9 +20,9 @@ public:
     double getAverage();
 private:
     int n = 0;
-    double averageSignal = 0;
+    double averageSignal = 0.0;
     double sampleInterval;
-    double absoluteSignal = 0;
-    double addedResult = 0;
+    double absoluteSignal = 0.0;
+    double addedResult = 0.0;
 };
 #endif /* signalAverage_hpp */

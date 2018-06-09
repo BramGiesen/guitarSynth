@@ -23,9 +23,9 @@ private:
     double a0, a1, a2, b1, b2;
     double Fc, Q, peakGain;
     double z1, z2;
-    double gain = 1;
-    double signal = 0;
-    double output = 0;
+    double gain = 1.0;
+    double signal = 0.0;
+    double output = 0.0;
     std::vector<std::vector<std::vector<double> > > channelBuffer;
 
 };

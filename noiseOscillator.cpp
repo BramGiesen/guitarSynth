@@ -19,7 +19,7 @@ NoiseOscillator::~NoiseOscillator() {}
 
 void NoiseOscillator::calculate()
 {
-    //NOTE sin() method is not the most efficient way to calculate the sine value
+    //gives random value's to create a noise oscillator
     sample = (rand() % 2) -1;
-    //std::cout << "\n" << phase  << "PI_2 " << "\n" ;
+    
 }
