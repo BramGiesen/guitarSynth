@@ -22,7 +22,7 @@ private:
     int n = 0;
     double averageSignal = 0;
     double sampleInterval;
-    double absoluteSignal;
-    double addedResult;
+    double absoluteSignal = 0;
+    double addedResult = 0;
 };
 #endif /* signalAverage_hpp */

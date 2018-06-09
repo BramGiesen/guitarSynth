@@ -10,6 +10,8 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "/Users/BramGiesen/Documents/HKU/aubio-0.4.5.darwin_framework/aubio.framework/Headers/aubio.h"
+#include <thread>
 
 //==============================================================================
 GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
@@ -21,22 +23,23 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), envFollowValues(15,0)
+                       ), envFollowValues(15,0), pitchDetectThread()
 #endif
 {
     for(int i = 0; i < lenghtOfAudioBuffer; i++){
         audioBufferPitch[i] = 0;
     }
-    PitchDetect pitch(audioBufferPitch);
-    pitcher = &pitch;
     
     addParameter (waveFormParam = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
     
+    //get `hop_s` new samples into `input`
+    input->data = audioBufferPitch;
     
 }
 
 GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
-{    
+{
+    //delete pointers
     delete bandPassFilters;
     bandPassFilters = nullptr;
     
@@ -45,6 +48,14 @@ GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
     
     delete oscillators;
     oscillators = nullptr;
+    
+    //clean up aubio
+    del_aubio_pitch (o);
+    del_fvec (out);
+//    del_fvec (input);
+    aubio_cleanup ();
+    
+    if(pitchDetectThread.joinable()) pitchDetectThread.join();
 }
 
 //==============================================================================
@@ -114,10 +125,11 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
 {
     lastSampleRate = sampleRate;
     
-    oscillators = new Oscillator*[2];
+    oscillators = new Oscillator*[3];
     
     oscillators[0] = new SineWave(lastSampleRate, 220, 0);
     oscillators[1] = new NoiseOscillator();
+    oscillators[2] = new SineWave(lastSampleRate, 0, 0);
     
     int numberOfBiquads = 60;
     bandPassFilters = new Biquad*[numberOfBiquads];
@@ -132,6 +144,9 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
     for (int i = 0; i < 15; i++){
         envelopeFollowers[i] = new EnvelopeFollower;
     }
+    
+    //start aubio pitch detection thread
+    StartThread();
 
 }
 
@@ -184,12 +199,12 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
     
     for(int sample = 0; sample < buffer.getNumSamples(); ++sample){
         
+    audioBufferPitch[x++ % lenghtOfAudioBuffer] = buffer.getSample(0, sample);
+       
         for (int channel = 0; channel< totalNumInputChannels; ++channel)
         {
             auto channelData = buffer.getWritePointer (channel);
             float  signal = buffer.getSample(channel, sample);
-            //zerox analysis
-            audioBufferPitch[x++ % lenghtOfAudioBuffer] = buffer.getSample(0, sample);
             
             
             for (int filterIndex = 0; filterIndex < 15; filterIndex++){
@@ -197,37 +212,33 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 ;
             }
 
+            //filter input again and send filtered signal to envelope follower
             for (int filterIndex = 15; filterIndex < 30; filterIndex++){
                 filterSignal2 = bandPassFilters[filterIndex]->process(channel, filterSignal1);
-                envFollowValues[filterIndex-15] = 100 * envelopeFollowers[filterIndex-15]->process(filterSignal2);
+                //process envolope followers and put the return values in a vector
+                envFollowValues[filterIndex-15] = 80 * envelopeFollowers[filterIndex-15]->process(filterSignal2);
             }
 
-            //envelope follower
+            //zerox analysis
             zerox.calculate(signal);
             int oscIndex = zerox.getZerox() - 1;
             double synthSample = oscillators[oscIndex]->getSample();
             
-//            pitcher->process();
             oscillators[0]->tick();
             oscillators[1]->tick();
+            oscillators[2]->tick();
             
             //Synthsignal + filters and envelope follower
             for (int filterIndex = 30; filterIndex < 45; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
                 addedfilterSignal1 = filterSignal + addedfilterSignal1;
             }
-
+            
+            //filter the signal one last time
             for (int filterIndex = 45; filterIndex < 60; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, addedfilterSignal1);
                 addedfilterSignal2 = (filterSignal * envFollowValues[filterIndex-45]) + addedfilterSignal2;
             }
-            
-//            for (int filterIndex = 30; filterIndex < 45; filterIndex++){
-//                float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
-//                addedfilterSignal2 = (filterSignal * envFollowValues[filterIndex-30]) + addedfilterSignal2;
-//                }
-            
-            
             
             channelData[sample] = addedfilterSignal2;
         }
@@ -243,6 +254,35 @@ bool GuitarSynth_2AudioProcessor::hasEditor() const
 AudioProcessorEditor* GuitarSynth_2AudioProcessor::createEditor()
 {
     return new GuitarSynth_2AudioProcessorEditor (*this);
+}
+
+void GuitarSynth_2AudioProcessor::StartThread(){
+    // This will start the thread. Notice move semantics!
+    pitchDetectThread = std::thread(&GuitarSynth_2AudioProcessor::pitchDetect,this);
+}
+
+void GuitarSynth_2AudioProcessor::pitchDetect()
+{
+    while (true){
+//      exectute pitch
+        aubio_pitch_do (o, input, out);
+        
+//      do something with output candidates
+        smpl_t pitchdetected = fvec_get_sample(out, 0);
+        
+//        std::cout <<"output = " << pitchdetected << std::endl;
+        fmFrequency = lowPass->process(pitchdetected);
+//        oscillators[0]->setFrequency(lowPass->process(pitchdetected));
+        
+        updateFrequency();
+    }
+
+}
+
+void GuitarSynth_2AudioProcessor::updateFrequency()
+{
+    oscillators[2]->setFrequency(fmFrequency * ratio);
+    oscillators[0]->setFrequency(fmFrequency + ((oscillators[2]->getSample())* (modDepth * fmFrequency * ratio)));
 }
 
 //==============================================================================

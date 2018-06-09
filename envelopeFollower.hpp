@@ -20,7 +20,7 @@ public:
     double process(double signal);
 private:
     double signal = 0;
-    double envelope;
+    double envelope = 0;
     OnePole *lowPass = new OnePole(10.0 / 44100);
     SignalAverage *svg = new SignalAverage(20);
     
