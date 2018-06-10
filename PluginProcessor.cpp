@@ -138,12 +138,14 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
     lastSampleRate = sampleRate;
     
     //create a list for the oscillators
-    oscillators = new Oscillator*[3];
+//    oscillators = new Oscillator*[3];
     
     //add oscillators
-    oscillators[0] = new SineWave(lastSampleRate, 220, 0);
-    oscillators[1] = new NoiseOscillator();
-    oscillators[2] = new SineWave(lastSampleRate, 0, 0);
+//    oscillators[0] = new SineWave(lastSampleRate, 220, 0);
+//    oscillators[1] = new NoiseOscillator();
+//    oscillators[2] = new SineWave(lastSampleRate, 0, 0);
+    
+    synth = new Synth(lastSampleRate);
     
     //create a list of biquad objects
     int numberOfBiquads = 60;
@@ -236,18 +238,23 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             //depending on the amount of crossings, the synthsample changes from a harmonic to a disharmonic sound(noise)
             int oscIndex = zerox.getZerox() - 1;
 //            double synthSample = oscillators[oscIndex]->getSample();
-            synthSample = oscillators[0]->getSample();
-            
+//            synthSample = oscillators[0]->getSample();
+            synthSample = synth->process();
 //            synthSample = applyDistortion(synthSample);
 
+            setBPM(lastPosInfo);
+            setFrequency();
+            synth->setLFO(*waveFormParam);
+            updateCurrentTimeInfoFromHost();
+            updateSynth();
             
-            //sets phase one tick forward
-            oscillators[0]->tick();
-            oscillators[1]->tick();
-            oscillators[2]->tick();
+//            //sets phase one tick forward
+//            oscillators[0]->tick();
+//            oscillators[1]->tick();
+//            oscillators[2]->tick();
             
             //update frequency for fm-synthesis
-            updateFrequency();
+//            updateFrequency();
             
             //Synthsignal gets filtered and is multiplied with envelope follower values that where calculated earlier
             for (int filterIndex = 30; filterIndex < 45; filterIndex++){
@@ -267,6 +274,11 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
     }
 }
 
+void GuitarSynth_2AudioProcessor::updateSynth()
+{
+    synth->setRatio(*fmRatioParam);
+    synth->setModDepth(*fmModDepthParam);
+}
 //==============================================================================
 bool GuitarSynth_2AudioProcessor::hasEditor() const
 {
@@ -299,13 +311,11 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
             lowPassPitch = lowPass->process(pitchdetected);
         }
 
-        
-        
         for (int i = 0; i <detectSize; i++){
             detectedPitches[i] = pitchdetected;
         }
         
-        
+        //look for number that appears the most in the array of detected pitches
         int max_count = 0;
         
         for (int i=0;i<detectSize;i++)
@@ -329,27 +339,14 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
         }
         
         fmFrequency = (round(12*log2( mostDetected / 440 ) + 69));
-        oscillatorFreq  = mtof(fmFrequency);
         
-
+        synthFrequency = synth->mtof(fmFrequency);
+//        std::cout << "frecuency = " << synthFrequency << std::endl;
         addedFreqs = 0;
     }
 
 }
 
-void GuitarSynth_2AudioProcessor::updateFrequency()
-{
-    ratio = *fmRatioParam;
-    modDepth = *fmModDepthParam;
-    //fm synthesis, 0 is the carrier 2 is the modulator
-    oscillators[2]->setFrequency(oscillatorFreq * ratio);
-    oscillators[0]->setFrequency(oscillatorFreq + ((oscillators[2]->getSample())* (modDepth * oscillatorFreq * ratio)));
-}
-
-float GuitarSynth_2AudioProcessor::mtof(float aubioFreq)
-{
-    return pow(2.0,(aubioFreq-69.0)/12.0) * 440.0;
-}
 
 double GuitarSynth_2AudioProcessor::applyDistortion(double signal)
 {
@@ -363,6 +360,97 @@ double GuitarSynth_2AudioProcessor::applyDistortion(double signal)
     return signal + signalDistortion;
 }
 
+void GuitarSynth_2AudioProcessor::updateCurrentTimeInfoFromHost()
+{
+    if (AudioPlayHead* ph = getPlayHead())
+    {
+        AudioPlayHead::CurrentPositionInfo newTime;
+        
+        if (ph->getCurrentPosition (newTime))
+        {
+            lastPosInfo = newTime;
+            return;
+        }
+    }
+    
+    lastPosInfo.resetToDefault();
+}
+
+
+void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
+{
+    beats = bpm.bpm;
+    
+    if(bpm.isLooping && (bpm.isPlaying || bpm.isRecording)){
+        if(!startTimeSet){
+            startLoop = bpm.timeInSeconds;
+            startTimeSet = true;
+        }
+        if(bpm.timeInSeconds == startLoop)
+            setOSCphase(bpm);
+    }
+    
+    if (bpm.isPlaying){
+        if(!setPhase){
+            setPhase = true;
+            setOSCphase(bpm);
+        }
+    }
+    else if (!bpm.isPlaying && !bpm.isRecording){
+        setPhase = false;
+        startTimeSet = false;
+    }
+    
+    
+}
+
+
+
+void GuitarSynth_2AudioProcessor::setFrequency()
+{
+    glide = *glideParam * -1 + 10.1;
+    (glide < 10) ? LFO = lowPass->process(synth->getLFOsample()* *LFOdepthParam) : LFO = synth->getLFOsample()* *LFOdepthParam;
+    lowPass->setFc(glide/sampleRate);
+    
+    synth->setFrequency(synthFrequency + LFO);
+    
+    
+    if(*LFOfrequencyParam < 0){
+        LFOP = *LFOfrequencyParam - 1;
+        LFOI = int(*LFOfrequencyParam);
+        LFOf = rateValues[(LFOI * -1)];
+        syncfreq = beats/LFOf;
+        synth->setLFOfreq(syncfreq);
+        
+        if(LFOI != previousLFOfreq){
+            if(!setPhaseSwitch){
+                setPhaseSwitch = true;
+                setOSCphase(lastPosInfo);
+            }
+            else{
+                
+                previousLFOfreq = LFOI;
+                setPhaseSwitch = false;
+            }
+        }
+        else {
+            previousLFOfreq = LFOI;
+        }
+    }else{
+        if(*LFOfrequencyParam < 0 && *LFOfrequencyParam > -0.5){ oscillators[1]->setFrequency(0); }
+        else{
+            synth->setLFOfreq(*LFOfrequencyParam);
+        }
+    }
+}
+
+void GuitarSynth_2AudioProcessor::setOSCphase(AudioPlayHead::CurrentPositionInfo bpm)
+{
+    double beatss = bpm.bpm;
+    double phaseLenght = 60 / beatss;
+    double timer = fmod(bpm.timeInSeconds,phaseLenght)/phaseLenght;
+    synth->setPhaseLFO(timer);
+}
 //==============================================================================
 
 //store parameters in the memory block.

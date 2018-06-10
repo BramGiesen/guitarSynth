@@ -119,7 +119,7 @@ attackReleaseLabel (String(), "ATTACK-RELEASE:")
     attackReleaseSlider-> setRange (0.0, 1.0, 0.0);
     attackReleaseSlider->setTextBoxStyle(juce::Slider::TextBoxBelow, true, 80, 20);
     
-
+    //ad Labels to the sliders
     fmRatioLabel.attachToComponent (fmRatioSlider, false);
     fmRatioLabel.setFont (Font (11.0f));
     
@@ -152,11 +152,6 @@ attackReleaseLabel (String(), "ATTACK-RELEASE:")
     
     amplitudeLabel.attachToComponent (amplitudeSlider, false);
     amplitudeLabel.setFont (Font (11.0f));
-    
-
-
-    
-  
     
     // set resize limits for this plug-in
     setResizeLimits (700, 200, 700, 200);
@@ -194,7 +189,6 @@ void GuitarSynth_2AudioProcessorEditor::paint (Graphics& g)
     g.fillAll();
     
     g.setColour(Colours::white);
-//    g.drawLine(0, 54, 700, 54);
     
     getLookAndFeel().setColour (Slider::thumbColourId, Colours::rosybrown);
     
@@ -208,19 +202,21 @@ void GuitarSynth_2AudioProcessorEditor::resized()
 {
     getProcessor().lastUIWidth = getWidth();
     getProcessor().lastUIHeight = getHeight();
-    // This lays out our child components...
     
+    //get a rectangle with local bounds, then scale the objects in that rectangle
     auto r = getLocalBounds();
     r.removeFromLeft(10);
     
+    //reser some space for top section
     auto topSection = r.removeFromTop(30);
-    
+    //top section objects
     waveFormBox.setBounds(100,15,200,20);
     glideSlider->setBounds(450, 0, 200, 50);
     
     r.removeFromTop (20);
     auto sliderArea = (r.removeFromTop (35));
     
+    //divide knobs in 
     auto bounds = getLocalBounds();
     auto knobSize = bounds.getWidth() / knobs.size();
 

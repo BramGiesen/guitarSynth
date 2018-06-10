@@ -17,11 +17,14 @@
 #include "biquad.hpp"
 #include "/Users/BramGiesen/aubio-0.4.5.darwin_framework/aubio.framework/Headers/aubio.h"
 #include "envelopeFollower.hpp"
-#include "sineWave.hpp"
-#include "noiseOscillator.hpp"
+//#include "sineWave.hpp"
+//#include "noiseOscillator.hpp"
+//#include "sawWave.cpp"
+//#include "fallingSaw.hpp"
 #include "zerox.hpp"
 #include "selector.hpp"
 #include "signalAverage.hpp"
+#include "Synthesizer.hpp"
 
 //==============================================================================
 /**
@@ -76,6 +79,7 @@ public:
 
     void setFrequency();
     void setWaveForm();
+    void updateSynth();
     
     void applyAmplitude();
     
@@ -110,6 +114,7 @@ private:
     double modDepth = 10.0;
     double ratio = 1.5;
     double fmFrequency = 0.0;
+    double synthFrequency = 0.0;
     double lowPassPitch = 0.0;
     double synthSample = 0.0;
     double previousFrequency = 220.0;
@@ -139,6 +144,7 @@ private:
     Selector selector;
     
     //Object pointers=========
+    Synth *synth;
     Oscillator **oscillators;
     Biquad **bandPassFilters;
     EnvelopeFollower **envelopeFollowers;

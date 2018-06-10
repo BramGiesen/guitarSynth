@@ -25,6 +25,11 @@ void Oscillator::tick()
     calculate();
 }
 
+void Oscillator::setPhase(double phase)
+{
+    this->phase = phase;
+}
+
 
 void Oscillator::setFrequency(double frequency)
 {
