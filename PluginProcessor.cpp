@@ -31,7 +31,18 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
         audioBufferPitch[i] = 0;
     }
     
-    addParameter (waveFormParam = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
+    lastPosInfo.resetToDefault();
+    addParameter (driveParam = new AudioParameterFloat ("DRIVE",  "DRIVE", 0.1f, 10.f, 0.1f));
+    addParameter (rangeParam = new AudioParameterFloat ("RANGE",  "RANGE", 0.1f, 10.f, 0.1f));
+    addParameter (fmRatioParam = new AudioParameterFloat ("FM_RATIO",  "FM_RATIO", 0.1f, 10.f, 0.1f));
+    addParameter (fmModDepthParam = new AudioParameterFloat ("FM_MOD_DEPTH",  "FM_MOD_DEPTH", 0.1f, 10.f, 0.1f));
+    addParameter (glideParam = new AudioParameterFloat ("GLIDE",  "LFO_glide", 0.1f, 10.f, 0.1f));
+    addParameter (attackReleaseParam  = new AudioParameterFloat ("ATTACK_RELEASE",  "ATTACK_RELEASE", 0.0f, 1200.0f, 0.9f));
+    addParameter (LFOfrequencyParam  = new AudioParameterFloat ("LFO_Frequency",  "LFO_Frequency", -10.0f, 10.0f,0.0f));
+    addParameter (LFOdepthParam = new AudioParameterFloat ("LFO_depth", "LFO_depth", 0.0f, 100.0f, 0.5f));
+    addParameter (waveFormParam   = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
+    addParameter (amplitudeParam = new AudioParameterFloat ("Dry_Wet", "Dry_Wet", 0.0f, 1.0f, 0.5f));
+    
     
     //get `hop_s` new samples into `input`
     input->data = audioBufferPitch;
@@ -212,6 +223,7 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             //get sample from JUCE buffer
             float  signal = buffer.getSample(channel, sample);
             
+            
             //filter the signal with 15 bandpass filters.
             for (int filterIndex = 0; filterIndex < 15; filterIndex++){
                 filterSignal1 = bandPassFilters[filterIndex]->process(channel, signal);
@@ -225,6 +237,8 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             int oscIndex = zerox.getZerox() - 1;
 //            double synthSample = oscillators[oscIndex]->getSample();
             synthSample = oscillators[0]->getSample();
+            
+//            synthSample = applyDistortion(synthSample);
 
             
             //sets phase one tick forward
@@ -238,15 +252,15 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             //Synthsignal gets filtered and is multiplied with envelope follower values that where calculated earlier
             for (int filterIndex = 30; filterIndex < 45; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
-                addedfilterSignal1 = filterSignal * ( 100 * envFollowValues[filterIndex-30]) + addedfilterSignal1;
+                addedfilterSignal1 = filterSignal * ( envFollowValues[filterIndex-30]) + addedfilterSignal1;
             }
 
 
             //apply distortion effect
-            addedfilterSignal1 = applyDistortion(addedfilterSignal1);
+//            addedfilterSignal1 = applyDistortion(addedfilterSignal1);
             
             //send data to correct channel
-            channelData[sample] = addedfilterSignal1;
+            channelData[sample] = addedfilterSignal1 + ( envFollowValues[10] * applyDistortion(synthSample));
             addedfilterSignal1 = 0;
             addedfilterSignal2 = 0;
         }
@@ -325,6 +339,8 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
 
 void GuitarSynth_2AudioProcessor::updateFrequency()
 {
+    ratio = *fmRatioParam;
+    modDepth = *fmModDepthParam;
     //fm synthesis, 0 is the carrier 2 is the modulator
     oscillators[2]->setFrequency(oscillatorFreq * ratio);
     oscillators[0]->setFrequency(oscillatorFreq + ((oscillators[2]->getSample())* (modDepth * oscillatorFreq * ratio)));
@@ -337,28 +353,64 @@ float GuitarSynth_2AudioProcessor::mtof(float aubioFreq)
 
 double GuitarSynth_2AudioProcessor::applyDistortion(double signal)
 {
-    signalDistortion *= drive * range;
-    signalDistortion *= (2.f / float_Pi) * atan(addedfilterSignal1);
-    
-    signalDistortion =  signalDistortion * blend;
-    signal = signal * ((blend * -1) + 1);
+    drive = *driveParam;
+    range = *rangeParam;
+    signalDistortion = signal * drive *  range;
+    signalDistortion *= (2.f / float_Pi) * atan(signalDistortion);
+//    signalDistortion =  signalDistortion * blend;
+//    signal = signal * ((blend * -1) + 1);
     
     return signal + signalDistortion;
 }
 
 //==============================================================================
+
+//store parameters in the memory block.
 void GuitarSynth_2AudioProcessor::getStateInformation (MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    
+    // Create an outer XML element..
+    XmlElement xml ("RMSETTINGS");
+    
+    // add some attributes to it..
+    xml.setAttribute ("uiWidth", lastUIWidth);
+    xml.setAttribute ("uiHeight", lastUIHeight);
+    
+    // Store the values of all our parameters, using their param ID as the XML attribute
+    for (auto* param : getParameters()){
+        if (auto* p = dynamic_cast<AudioProcessorParameterWithID*> (param)){
+            xml.setAttribute (p->paramID, p->getValue());
+        }
+    }
+    // then use this helper function to stuff it into the binary blob and return it..
+    copyXmlToBinary (xml, destData);
 }
 
+
+// restore the parameters from this memory block
 void GuitarSynth_2AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    // This getXmlFromBinary() helper function retrieves our XML from the binary blob..
+    ScopedPointer<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    
+    if (xmlState != nullptr)
+    {
+        // make sure that it's actually our type of XML object..
+        if (xmlState->hasTagName ("RMSETTINGS"))
+        {
+            // ok, now pull out our last window size..
+            lastUIWidth  = jmax (xmlState->getIntAttribute ("uiWidth", lastUIWidth), 400);
+            lastUIHeight = jmax (xmlState->getIntAttribute ("uiHeight", lastUIHeight), 200);
+            
+            // Now reload our parameters..
+            for (auto* param : getParameters())
+                if (auto* p = dynamic_cast<AudioProcessorParameterWithID*> (param))
+                    p->setValue ((float) xmlState->getDoubleAttribute (p->paramID, p->getValue()));
+        }
+    }
 }
+
+
 
 //==============================================================================
 // This creates new instances of the plugin..

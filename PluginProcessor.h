@@ -74,13 +74,41 @@ public:
     
     void updateFrequency();
 
+    void setFrequency();
+    void setWaveForm();
+    
+    void applyAmplitude();
+    
+    
+    //==============================================================================
+    
+    AudioPlayHead::CurrentPositionInfo lastPosInfo;
+    
+    
+    int lastUIWidth = 400, lastUIHeight = 200;
+    
+    // Our parameters
+    AudioParameterFloat* glideParam = nullptr;
+    AudioParameterFloat* driveParam = nullptr;
+    AudioParameterFloat* rangeParam = nullptr;
+    AudioParameterFloat* fmRatioParam = nullptr;
+    AudioParameterFloat* fmModDepthParam = nullptr;
+    AudioParameterFloat* attackReleaseParam = nullptr;
+    AudioParameterFloat* amplitudeParam = nullptr;
+    AudioParameterFloat* LFOfrequencyParam = nullptr;
+    AudioParameterFloat* LFOdepthParam = nullptr;
     AudioParameterChoice* waveFormParam;
+    
+    
+    // Current track colour and name
+    TrackProperties trackProperties;
 private:
+    
     //variables
     
     //==FM===================
     double modDepth = 10.0;
-    double ratio = 1;
+    double ratio = 1.5;
     double fmFrequency = 0.0;
     double lowPassPitch = 0.0;
     double synthSample = 0.0;
@@ -99,7 +127,7 @@ private:
     double drive = 1;
     double range = 1;
     double signalDistortion = 0;
-    double blend = 0;
+    double blend = 1;
     
     //vectors & arrays========
     std::vector<double> envFollowValues;
@@ -146,6 +174,36 @@ private:
     
     //pitch detection thread
     std::thread pitchDetectThread;
+    
+    
+    double sampleRate = 0;
+    double phase = 0;
+    double sineWave = 0;
+    double LFO = 0;
+    float amplitudeWet = 0;
+    float amplitudeDry = 0;
+    int previousI = 1;
+    float glide = 0;
+    float syncfreq = 0;
+    float beats = 120;
+    double startLoop = 0;
+    
+    int LFOI = 0;
+    float LFOf = 0;
+    float previousLFOfreq = 0;
+    float LFOP = 0;
+    float lowpassParam = 0;
+    
+    bool startTimeSet = false;
+    bool initWaveform = false;
+    bool setPhase = false;
+    bool setPhaseSwitch = false;
+    
+    
+    float rateValues[11]{15,20,30,40,60,80,120,160.0000000001,240,320.0000000002,480};
+    void setBPM(AudioPlayHead::CurrentPositionInfo bpm);
+    void setOSCphase(AudioPlayHead::CurrentPositionInfo bpm);
+    void updateCurrentTimeInfoFromHost();
     
     
 
