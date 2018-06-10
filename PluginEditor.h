@@ -45,10 +45,10 @@ private:
         {
            
             
-            for (auto i = 0; i < 2; ++i)
+            for (auto i = 0; i < 1; ++i)
                 addAndMakeVisible (labelsRight.add (new Label({}, labelText[i])));
             
-            for (int i = 0; i < 2; ++i)
+            for (int i = 0; i < 1; ++i)
             {
                 auto* slider = new Slider();
                 
@@ -83,7 +83,7 @@ private:
         }
         
         Colour backgroundColour;
-        std::string labelText[2]{"Attack", "Release"};
+        std::string labelText[2]{"Attack-Release"};
         OwnedArray<Slider> knobsRight;
         OwnedArray<Label> labelsRight;
     };
@@ -214,10 +214,10 @@ private:
                     addAndMakeVisible (choiceBottom.add (waveformChoice));
                     labelsBottom[1+i]->attachToComponent(waveformChoice, false);
 
-//                    auto &num = processorRef->waveFormParam->choices;
-//                    auto x = 1;
-//                    for (auto &choice : processorRef->waveFormParam->choices)
-//                        waveformChoice->addItem (choice, x++);
+                    auto &num = processorRef->waveFormParam->choices;
+                    auto x = 1;
+                    for (auto &choice : processorRef->waveFormParam->choices)
+                        waveformChoice->addItem (choice, x++);
                 }
                 
                 for (int i = 0; i < 2; ++i)

@@ -21,10 +21,16 @@ EnvelopeFollower::EnvelopeFollower()
     svg = nullptr;
 }
 
+void EnvelopeFollower::setAttackReleaseValue(double frequency)
+{
+    lowPass->setFc(frequency/44100);
+}
+
 double EnvelopeFollower::process(double signal)
 {
     svg->calculate(signal);
-    envelope = lowPass->process(svg->getAverage());
+    averageSignal = svg->getAverage();
+    envelope = lowPass->process(averageSignal);
     // KIJK hier nog naar! 
 //    envelope = (envelope < 0.000001) ? 0.0 : envelope;
     return envelope * 100.0;
