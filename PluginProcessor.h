@@ -11,6 +11,7 @@
 #pragma once
 
 #include <thread>
+#include <math.h>
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "biquad.hpp"
@@ -20,7 +21,7 @@
 #include "noiseOscillator.hpp"
 #include "zerox.hpp"
 #include "selector.hpp"
-#include <math.h>
+#include "signalAverage.hpp"
 
 //==============================================================================
 /**
@@ -76,10 +77,13 @@ private:
     //variables
     
     //==FM===================
-    double modDepth = 10.0;
-    double ratio = 2.0;
+    double modDepth = 100.0;
+    double ratio = 1;
     double fmFrequency = 0.0;
     double lowPassPitch = 0.0;
+    double synthSample = 0.0;
+    double previousFrequency = 220.0;
+    double oscillatorFreq = 0.0;
     
     //==FILTERS==============
     float filterSignal1 = 0.0;
@@ -102,7 +106,7 @@ private:
     Oscillator **oscillators;
     Biquad **bandPassFilters;
     EnvelopeFollower **envelopeFollowers;
-    OnePole *lowPass = new OnePole(10.0 / 44100.0);
+    OnePole *lowPass = new OnePole(100.0 / 44100.0);
     
     //is used for ringbuffer: audioBufferPitch
     int x = 0;
@@ -116,7 +120,9 @@ private:
     uint_t win_s = 4096.0; // window size
     uint_t hop_s = win_s / 4.0; // hop size
     smpl_t pitchdetected = 0.0;
+    double addedFreqs = 0.0;
     
+    bool init = false;
     //TODO make flexible
     uint_t samplerate = 44100.0; // samplerate
     
@@ -126,9 +132,10 @@ private:
     // create pitch object
     aubio_pitch_t *o = new_aubio_pitch ("default", win_s, hop_s, samplerate);
     
-    
     //pitch detection thread
     std::thread pitchDetectThread;
+    
+    
 
     
     //==============================================================================

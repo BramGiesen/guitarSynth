@@ -215,40 +215,46 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             //filter the signal with 15 bandpass filters.
             for (int filterIndex = 0; filterIndex < 15; filterIndex++){
                 filterSignal1 = bandPassFilters[filterIndex]->process(channel, signal);
-;
+                envFollowValues[filterIndex] = envelopeFollowers[filterIndex]->process(filterSignal1);
             }
 
             //filter signal again and send filtered signal to envelope follower
-            for (int filterIndex = 15; filterIndex < 30; filterIndex++){
-                filterSignal2 = bandPassFilters[filterIndex]->process(channel, filterSignal1);
+//            for (int filterIndex = 15; filterIndex < 30; filterIndex++){
+//                filterSignal2 = bandPassFilters[filterIndex]->process(channel, filterSignal1);
                 //process envolope followers and put the return values in a vector
-                envFollowValues[filterIndex-15] = 100 * envelopeFollowers[filterIndex-15]->process(filterSignal2);
-            }
+//                envFollowValues[filterIndex-15] = envelopeFollowers[filterIndex-15]->process(filterSignal1);
+//            }
 
             //zerox analysis, checks how many times the signal crosses the zero line.
             zerox.calculate(signal);
             //depending on the amount of crossings, the synthsample changes from a harmonic to a disharmonic sound(noise)
             int oscIndex = zerox.getZerox() - 1;
-            double synthSample = oscillators[oscIndex]->getSample();
+//            double synthSample = oscillators[oscIndex]->getSample();
+            synthSample = oscillators[0]->getSample();
+
             
             //sets phase one tick forward
             oscillators[0]->tick();
             oscillators[1]->tick();
             oscillators[2]->tick();
+            updateFrequency();
             
             //Synthsignal gets filtered and is multiplied with envelope follower values that where calculated earlier
             for (int filterIndex = 30; filterIndex < 45; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
-                addedfilterSignal1 = filterSignal + addedfilterSignal1;
+                addedfilterSignal1 = filterSignal * (100 * envFollowValues[filterIndex-30]) + addedfilterSignal1;
             }
+
+//            //filter the signal one last time
+//            for (int filterIndex = 45; filterIndex < 60; filterIndex++){
+//                float filterSignal = bandPassFilters[filterIndex]->process(channel, filterSignal1);
+//                addedfilterSignal2 = (filterSignal * (100 * envFollowValues[filterIndex-45])) + addedfilterSignal2;
+//            }
+//
             
-            //filter the signal one last time
-            for (int filterIndex = 45; filterIndex < 60; filterIndex++){
-                float filterSignal = bandPassFilters[filterIndex]->process(channel, addedfilterSignal1);
-                addedfilterSignal2 = (filterSignal * envFollowValues[filterIndex-45]) + addedfilterSignal2;
-            }
+    
             //sends the filtered synth signal to the correct channel
-            channelData[sample] = addedfilterSignal2;
+            channelData[sample] = addedfilterSignal1;
             addedfilterSignal1 = 0;
             addedfilterSignal2 = 0;
         }
@@ -280,24 +286,48 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
 //      do something with output candidates
         smpl_t pitchdetected = fvec_get_sample(out, 0);
         
-        lowPassPitch = lowPass->process(pitchdetected);
         
-        fmFrequency = round(12*log2( lowPassPitch / 440 ) + 69);
-//        std::cout <<"output = " << pitchdetected << std::endl;
+        for (int i = 0; i <200000; i++){
+            
+            lowPassPitch = lowPass->process(pitchdetected);
+            addedFreqs = lowPassPitch + addedFreqs;
+        }
+        
+        addedFreqs =  addedFreqs / 200000;
+        
+        fmFrequency = (round(12*log2( addedFreqs / 440 ) + 69));
+
+        
         fmFrequency = mtof(fmFrequency);
         
-        //update frequency for fm-synthesis
-        updateFrequency();
+//        if(fmFrequency < 130 && !init){
+//            previousFrequency = fmFrequency;
+//            init = true;
+//        }
+
+        if(fmFrequency != previousFrequency){
+            //update frequency for fm-synthesis
+            if((fmFrequency < (previousFrequency / 2)) || (fmFrequency > (previousFrequency * 2))){
+                fmFrequency = previousFrequency;
+            }
+            if(fmFrequency < 50){
+                fmFrequency = previousFrequency;
+            }
+//            oscillators[0]->setFrequency(fmFrequency);
+            oscillatorFreq = fmFrequency;
+            previousFrequency = fmFrequency;
+        }
+
+        addedFreqs = 0;
     }
 
 }
 
 void GuitarSynth_2AudioProcessor::updateFrequency()
 {   //fm synthesis, 0 is the carrier 2 is the modulator
-    oscillators[2]->setFrequency(fmFrequency * ratio);
-    oscillators[0]->setFrequency(fmFrequency + ((oscillators[2]->getSample())* (modDepth * fmFrequency * ratio)));
-//    oscillators[0]->setFrequency(fmFrequency);
 //    std::cout << "fmfreq = " << fmFrequency << std::endl;
+    oscillators[2]->setFrequency(oscillatorFreq * ratio);
+    oscillators[0]->setFrequency(oscillatorFreq + ((oscillators[2]->getSample())* (modDepth * oscillatorFreq * ratio)));
 }
 
 float GuitarSynth_2AudioProcessor::mtof(float aubioFreq)

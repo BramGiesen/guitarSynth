@@ -26,6 +26,6 @@ double EnvelopeFollower::process(double signal)
     svg->calculate(signal);
     envelope = lowPass->process(svg->getAverage());
     // KIJK hier nog naar! 
-    envelope = (envelope < 0.000001) ? 0.0 : envelope;
+//    envelope = (envelope < 0.000001) ? 0.0 : envelope;
     return envelope * 100.0;
 }
