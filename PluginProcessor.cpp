@@ -367,7 +367,7 @@ void GuitarSynth_2AudioProcessor::updateCurrentTimeInfoFromHost()
     lastPosInfo.resetToDefault();
 }
 
-//this function triggers the to be set at a correct value when the playhead of the D.A.W have been stopped
+//this function sets the phase of the LFO to the correct value when the playhead of the D.A.W have been stopped and starts playing again
 void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
 {
     beats = bpm.bpm;
