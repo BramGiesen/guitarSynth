@@ -56,7 +56,7 @@ Dit is het systeem dat heb gebruikt voor mijn envelope follower. Het artikel is 
 Dit gaat vervolgens door een one pole lowpass filter heen.
 
 ###### oscillatoren:
-Naast het analyse deel en filtering heeft een vocoder ook twee oscillatoren. Als basis heb ik de classes uit blok csd2c gebruikt. Voor de noise oscillator heb ik de sinus formule vervangen met een random functie om op deze manier ruis te genereren. Op dit moment gebruik ik FM-synthese om een vollere klank te krijgen.  
+Naast het analyse deel en filtering heeft een vocoder ook een aantal oscillatoren. Als basis heb ik de classes uit blok csd2c gebruikt. Voor de noise oscillator heb ik de sinus formule vervangen met een random functie om op deze manier ruis te genereren. Op dit moment gebruik ik FM-synthese om een vollere klank te krijgen.  
 
 ###### Aubio:
 Ik vond het lastig om aubio aan de praat te krijgen binnen Xcode. Uiteindelijk bleek dat ik het framework via een ander menu moest toevoegen.  
