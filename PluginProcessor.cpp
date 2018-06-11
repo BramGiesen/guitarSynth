@@ -396,7 +396,7 @@ void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
 }
 
 
-
+//sets frequency of the synth carrier, modulator and LFO
 void GuitarSynth_2AudioProcessor::setFrequency()
 {
     glide = *glideParam * -1 + 10.1;
