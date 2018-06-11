@@ -7,25 +7,7 @@
 ###### signal flow:
 <img src="images/flowChart.jpg">
 
-###### classes:
-  * PluginProcessor
-  * PluginEditor
-  * BiquadFilter
-  * OnePoleFilter
-  * Zerox
-  * Selector
-  * Synthesizer
-  * oscillator
-  * sineWave
-  * SquareWave
-  * NoiseOscillator
-
-###### GUI:
-
-Parameters aangemaakt in for loops en in verschillende structs, hiermee word de GUI in verschillende vlakken onderverdeeld.
-
 ###### Filters:
-
 Voor de filter implementatie heb ik gekozen voor een biquad filter, direct form II. Deze filter werkt met twee delaybuffers. Voor de buffers gebruik ik een aantal vectors. Ik ben begonnen met een mono implementatie, dus waarbij je voor ieder stereo-kanaal twee buffers moest aanmaken. Nadat ik dit werkend had ben ik gaan nadenken hoe ik dit efficiënter kon maken.
 
 Toen kwam ik op het idee om 3d vectors te gebruiken. Ik heb 1 vector aangemaakt waarin 2 vectoren zitten voor de kanalen(stereo) deze vectoren bevatten ieder weer twee vectoren voor de delayBuffers.
@@ -39,7 +21,7 @@ De filters maken het geluid op het moment wel heel erg zacht, dus ik denk dat ik
 
 ###### for loops:
 
-Omdat er een behoorlijk aantal filters in een vocoder zitten, 60 stuks, heb ik mijn programma zo geschreven dat deze worden aangemaakt en ook binnen de process-functie heb ik veel for loops gebruikt om de code op deze manier flexibel en overzichtelijk te houden.
+Omdat er een behoorlijk aantal filters in een vocoder zitten, 30 stuks, heb ik mijn programma zo geschreven dat deze worden aangemaakt en ook binnen de process-functie heb ik veel for loops gebruikt om de code op deze manier flexibel en overzichtelijk te houden.
 
 ```
 bandPassFilters = new Biquad*[60];
@@ -87,6 +69,10 @@ Ik koppel aubio aan JUCE door de samples afkomstig uit de buffer van JUCE weg te
 ###### Van aubio naar de synth:
 
 Aubio pakte de frequenties redelijk goed maar er zaten wel pieken en dalen in de pitch in Hertz die aubio teruggaf.
-Om de fluctuatie tegen te gaan haal ik de frequenties door een lowpass filter om de uitschieters eruit te filteren.
+hiernaast waren er ook nog andere kleinere fluctuaties alsmede dat de pitches die aubio terug geeft niet stemmingssysteem gebonden zijn dus passen zij ook niet allemaal in ons westers stemmingssysteem. Om dit op te lossen reken ik de frequenties van aubio eerst om naar de MIDI-nootwaarde waar de frequentie het dichst bij zit. Hierna geef ik die MIDI-nootwaarde door aan een mtof functie die het weer omzet naar de juiste frequentie.
 
-Hiernaast komen de frequenties die aubio geeft niet exact overeen met de frequenties van ons westers stemmings-systeem. Om dit op te lossen reken ik de frequenties van aubio eerst om naar de MIDI-nootwaarde waar de frequentie het dichst bij zit. Hierna geef ik die MIDI-nootwaarde door aan een mtof functie die het weer omzet naar de juiste frequentie.
+Om de fluctuaties tegen te gaan schrijf ik de gedetecteerde pitches weg in een array en wordt er iedere 200 samples gekeken welke pitch er het meeste in de array voorkwam en deze wordt dan doorgeven aan de synth.
+
+###### GUI:
+
+Ik had in mijn oorspronkelijke GUI de parameters aangemaakt in for loops en in verschillende structs, hiermee word de GUI in verschillende vlakken onderverdeeld. Hoewel dit een mooier systeem was heb ik dit voor nu laten zitten in verband met de tijd. De GUI zelf stond al maar hij moest nog gekoppeld worden aan de processor class van JUCE. Omdat ik nog niet had uitgezocht hoe ik dit precies moest doen dacht ik dat het toch iets te veel tijd zou gaan kosten. Hierom heb ik gekozen om te gaan voor een vergelijkbare GUI die ik al in een eerder project had gebruikt omdat ik hierbij precies wist hoe ik het moest coderen.
