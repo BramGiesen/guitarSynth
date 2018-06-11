@@ -19,6 +19,8 @@ Zerox::~Zerox()
 
 void Zerox::calculate(double aSignal)
 {
+    //it compares the current signal with the previous signal. If one is positif and the other negatif it detects a
+    //zero crossing
     if(count < signalVectorSize){
         if((aSignal >= 0.0 && previousSignal <= 0.0)||(aSignal <= 0.0 && previousSignal >= 0.0))
         {

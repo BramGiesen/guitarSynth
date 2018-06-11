@@ -10,12 +10,10 @@
 Synth::Synth(double sampleRate)
 {
     this->sampleRate = sampleRate;
-    
-    lowPass = new OnePole(10.0/sampleRate);
-    
+
     oscillators = new Oscillator*[3];
     
-    //carrier and modulator
+    //create a carrier a modulator and a noise oscillator
     oscillators[0] = new SineWave(sampleRate, 220, 0);
     oscillators[1] = new SineWave(sampleRate, 0, 0);
     oscillators[2] = new RandomGenerator(sampleRate, 0, 0);
@@ -24,15 +22,14 @@ Synth::Synth(double sampleRate)
 
 Synth::~Synth()
 {
-    delete lowPass;
-    lowPass = nullptr;
-    
     delete oscillators;
     oscillators = nullptr;
 }
 
+
 void Synth::setLFO(int LFOnumber)
 {
+    //checks if the LFOparam has changed. If it has, it changes the LFO wave form
     if(LFOnumber != previousWaveForm || !initWaveForm){
         initWaveForm = true;
         switch (LFOnumber) {
@@ -65,7 +62,6 @@ void Synth::setGlide(double glide)
 void Synth::setFrequency(double frequency)
 {
     this->frequency = frequency;
-//    std::cout << "SYNTH " << frequency << std::endl;
 }
 
 void Synth::setLFOfreq(double LFOfreq)
@@ -88,6 +84,7 @@ void Synth::setModDepth(float fmModDepth)
     this->fmModDepth = fmModDepth;
 }
 
+
 double Synth::getLFOsample()
 {
     return oscillators[2]->getSample();
@@ -106,6 +103,7 @@ void Synth::updateFrequency()
 
 double Synth::mtof(double midiPitch)
 {
+    //convert MIDI-pitch to frequency
     double pitch = midiPitch;
     pitch = pow(2.0,(pitch-69.0)/12.0) * 440.0;
     return pitch;
@@ -114,12 +112,14 @@ double Synth::mtof(double midiPitch)
 
 double Synth::process()
 {
+    //update frequency for FM synthesis
     updateFrequency();
     
     oscillators[0]->tick();
     oscillators[1]->tick();
    
+    //get sample of the carrier
     sample = oscillators[0]->getSample();
-//    std::cout << sample << std::endl;
+    
     return sample;
 }

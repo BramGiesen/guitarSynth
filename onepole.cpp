@@ -1,8 +1,7 @@
+//written by: Nigel Redmon
+//source from: www.earlevel.com/main/2012/12/15/a-one-pole-filter/
 //
-//  onepole.cpp
-//  GuitarSynth_2
-//
-//  Created by Bram Giesen on 03-06-18.
+//  OnePole.h
 //
 
 #include <stdio.h>

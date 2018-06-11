@@ -17,17 +17,12 @@
 class RandomGenerator : public Oscillator
 {
 public:
-    
-    //constructors and destructor
     RandomGenerator(double samplerate);
     RandomGenerator(double samplerate, double frequency);
     RandomGenerator(double samplerate, double frequency, double phase);
     ~RandomGenerator();
-    //prevent the default constructor to be generated
     RandomGenerator() = delete;
     
-    //override calculate
-    //this method contains the sample calculation
     void calculate() override;
     
 private:

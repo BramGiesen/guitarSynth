@@ -14,8 +14,6 @@
 class SquareWave : public Oscillator
 {
 public:
-    
-    //constructors and destructor
     SquareWave(double samplerate);
     SquareWave(double samplerate, double frequency);
     SquareWave(double samplerate, double frequency, double phase);

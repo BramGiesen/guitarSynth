@@ -28,6 +28,7 @@ InvertedSawWave::~InvertedSawWave()
 
  void InvertedSawWave::calculate()
 {
+    //inverted non-bandlimited saw for LFO
     sample = phase *-1 + 1;
 }
 

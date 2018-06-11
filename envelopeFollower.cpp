@@ -21,6 +21,7 @@ EnvelopeFollower::EnvelopeFollower()
     svg = nullptr;
 }
 
+//set low pass frequency, I use it to get different attack and release times
 void EnvelopeFollower::setAttackReleaseValue(double frequency)
 {
     lowPass->setFc(frequency/44100);
@@ -28,10 +29,12 @@ void EnvelopeFollower::setAttackReleaseValue(double frequency)
 
 double EnvelopeFollower::process(double signal)
 {
+    //calculate average signal
     svg->calculate(signal);
+    //get average signal
     averageSignal = svg->getAverage();
+    //low pass the averige signal, to make it smoother. I also use the low pass to adjust the attack and release of the synth
     envelope = lowPass->process(averageSignal);
-    // KIJK hier nog naar! 
-//    envelope = (envelope < 0.000001) ? 0.0 : envelope;
+
     return envelope * 100.0;
 }

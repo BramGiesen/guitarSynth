@@ -8,6 +8,8 @@
 #include "selector.hpp"
 #include <initializer_list>
 
+//NOT IMPLEMENTED JET!!!!
+
 Selector::Selector()
 {
 }

@@ -30,6 +30,7 @@ SawWave::~SawWave()
 
 void SawWave::calculate()
 {
+    //non band-limited sawWave for the LFO
     sample = phase;
 }
 

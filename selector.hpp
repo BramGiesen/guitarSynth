@@ -5,6 +5,9 @@
 //  Created by Bram Giesen on 05-06-18.
 //
 
+
+//NOT IMPLEMENTED JET!!
+
 #ifndef selector_hpp
 #define selector_hpp
 

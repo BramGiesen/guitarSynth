@@ -19,7 +19,7 @@ NoiseOscillator::~NoiseOscillator() {}
 
 void NoiseOscillator::calculate()
 {
-    //gives random value's to create a noise oscillator
+    //gives random values to create a noise oscillator
     sample = (rand() % 2) -1;
     
 }

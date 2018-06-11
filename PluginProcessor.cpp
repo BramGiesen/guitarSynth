@@ -27,11 +27,14 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
                        ), envFollowValues(15,0), pitchDetectThread()
 #endif
 {
+    //clean buffer(used to connect to aubio)
     for(int i = 0; i < lenghtOfAudioBuffer; i++){
         audioBufferPitch[i] = 0;
     }
     
     lastPosInfo.resetToDefault();
+    
+    //add parameters, these are connected to the parameters in the PluginEditor.cpp(GUI)
     addParameter (driveParam = new AudioParameterFloat ("DRIVE",  "DRIVE", 0.1f, 10.f, 0.1f));
     addParameter (rangeParam = new AudioParameterFloat ("RANGE",  "RANGE", 0.1f, 10.f, 0.1f));
     addParameter (fmRatioParam = new AudioParameterFloat ("FM_RATIO",  "FM_RATIO", 0.1f, 10.f, 0.1f));
@@ -137,13 +140,10 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
 {
     lastSampleRate = sampleRate;
     
-    //create a list for the oscillators
-//    oscillators = new Oscillator*[3];
-    
-    //add oscillators
-//    oscillators[0] = new SineWave(lastSampleRate, 220, 0);
-//    oscillators[1] = new NoiseOscillator();
-//    oscillators[2] = new SineWave(lastSampleRate, 0, 0);
+    //create Low pass filters
+    lowPass = new OnePole(100.0 / sampleRate);
+    envlowPass = new OnePole (1.0 / sampleRate);
+    LFOlowPass = new OnePole (10.0 / sampleRate);
     
     synth = new Synth(lastSampleRate);
     
@@ -226,7 +226,7 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             float  signal = buffer.getSample(channel, sample);
             
             
-            //filter the signal with 15 bandpass filters.
+            //filter the signal with 15 bandpass filters and calculate the envelope for each filter band.
             for (int filterIndex = 0; filterIndex < 15; filterIndex++){
                 filterSignal1 = bandPassFilters[filterIndex]->process(channel, signal);
                 envFollowValues[filterIndex] = envelopeFollowers[filterIndex]->process(filterSignal1);
@@ -235,12 +235,13 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 
             //zerox analysis, checks how many times the signal crosses the zero line.
             zerox.calculate(signal);
+            
             //depending on the amount of crossings, the synthsample changes from a harmonic to a disharmonic sound(noise)
             int oscIndex = zerox.getZerox() - 1;
-//            double synthSample = oscillators[oscIndex]->getSample();
-//            synthSample = oscillators[0]->getSample();
+
+            //get sample from synthesizer
             synthSample = synth->process();
-//            synthSample = applyDistortion(synthSample);
+
 
             setBPM(lastPosInfo);
             setFrequency();
@@ -248,32 +249,24 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             updateCurrentTimeInfoFromHost();
             updateSynth();
             
-//            //sets phase one tick forward
-//            oscillators[0]->tick();
-//            oscillators[1]->tick();
-//            oscillators[2]->tick();
+
             
-            //update frequency for fm-synthesis
-//            updateFrequency();
-            
-            //Synthsignal gets filtered and is multiplied with envelope follower values that where calculated earlier
+            //Synth signal gets filtered and is multiplied with envelope follower values that where calculated earlier
             for (int filterIndex = 30; filterIndex < 45; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
                 addedfilterSignal1 = filterSignal * ( envFollowValues[filterIndex-30]) + addedfilterSignal1;
             }
 
-
-            //apply distortion effect
-//            addedfilterSignal1 = applyDistortion(addedfilterSignal1);
-            
             //send data to correct channel
             channelData[sample] = addedfilterSignal1 + ( envFollowValues[10] * applyDistortion(synthSample));
+            
+            //empty the added  filter signals
             addedfilterSignal1 = 0;
-            addedfilterSignal2 = 0;
         }
     }
 }
 
+//gets value's from GUI and sends it to the synthesizer
 void GuitarSynth_2AudioProcessor::updateSynth()
 {
     synth->setRatio(*fmRatioParam);
@@ -291,31 +284,27 @@ AudioProcessorEditor* GuitarSynth_2AudioProcessor::createEditor()
 }
 
 void GuitarSynth_2AudioProcessor::StartThread(){
-    // This will start the thread. Notice move semantics!
+    // start the pitch detection thread
     pitchDetectThread = std::thread(&GuitarSynth_2AudioProcessor::pitchDetect,this);
 }
 
 void GuitarSynth_2AudioProcessor::pitchDetect()
 {
     while (true){
-//      exectute pitch detection
+        //exectute pitch detection
         aubio_pitch_do (o, input, out);
         
-//      do something with output candidates
+        //put detected pitch in a variable
         smpl_t pitchdetected = fvec_get_sample(out, 0);
         
+        //size of the buffer with detected pitches
         int detectSize = 200;
         
-        for (int i = 0; i <detectSize; i++){
-            
-            lowPassPitch = lowPass->process(pitchdetected);
-        }
-
         for (int i = 0; i <detectSize; i++){
             detectedPitches[i] = pitchdetected;
         }
         
-        //look for number that appears the most in the array of detected pitches
+        //look for number(pitch) that appears the most in the array of detected pitches
         int max_count = 0;
         
         for (int i=0;i<detectSize;i++)
@@ -338,28 +327,30 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
                 mostDetected = detectedPitches[i];
         }
         
+        //convert hertz to closest MIDI-value
         fmFrequency = (round(12*log2( mostDetected / 440 ) + 69));
         
+        //converts MIDI-value to frequency that matches our western tuning system
         synthFrequency = synth->mtof(fmFrequency);
-//        std::cout << "frecuency = " << synthFrequency << std::endl;
-        addedFreqs = 0;
+       
     }
 
 }
 
-
+//distortion effect
 double GuitarSynth_2AudioProcessor::applyDistortion(double signal)
 {
     drive = *driveParam;
     range = *rangeParam;
+    //boost signal
     signalDistortion = signal * drive *  range;
+    //clip the signal
     signalDistortion *= (2.f / float_Pi) * atan(signalDistortion);
-//    signalDistortion =  signalDistortion * blend;
-//    signal = signal * ((blend * -1) + 1);
     
     return signal + signalDistortion;
 }
 
+//get info from D.A.W
 void GuitarSynth_2AudioProcessor::updateCurrentTimeInfoFromHost()
 {
     if (AudioPlayHead* ph = getPlayHead())
@@ -376,7 +367,7 @@ void GuitarSynth_2AudioProcessor::updateCurrentTimeInfoFromHost()
     lastPosInfo.resetToDefault();
 }
 
-
+//this function triggers the to be set at a correct value when the playhead of the D.A.W have been stopped
 void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
 {
     beats = bpm.bpm;
@@ -409,12 +400,13 @@ void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
 void GuitarSynth_2AudioProcessor::setFrequency()
 {
     glide = *glideParam * -1 + 10.1;
+    //if glide is set to 10 the lowPass filter is bypassed
     (glide < 10) ? LFO = lowPass->process(synth->getLFOsample()* *LFOdepthParam) : LFO = synth->getLFOsample()* *LFOdepthParam;
     lowPass->setFc(glide/sampleRate);
     
     synth->setFrequency(synthFrequency + LFO);
     
-    
+    //takes a value out of array rateValues depending on de position of the *LFOfrequencyParam
     if(*LFOfrequencyParam < 0){
         LFOP = *LFOfrequencyParam - 1;
         LFOI = int(*LFOfrequencyParam);
@@ -422,6 +414,8 @@ void GuitarSynth_2AudioProcessor::setFrequency()
         syncfreq = beats/LFOf;
         synth->setLFOfreq(syncfreq);
         
+        
+        //check if the parameter has changed, if it hasn't changed it blocks the incomming stream to setOSCphase()
         if(LFOI != previousLFOfreq){
             if(!setPhaseSwitch){
                 setPhaseSwitch = true;
@@ -437,16 +431,19 @@ void GuitarSynth_2AudioProcessor::setFrequency()
             previousLFOfreq = LFOI;
         }
     }else{
-        if(*LFOfrequencyParam < 0 && *LFOfrequencyParam > -0.5){ oscillators[1]->setFrequency(0); }
+        if(*LFOfrequencyParam < 0 && *LFOfrequencyParam > -0.5){ synth->setLFOfreq(0); }
         else{
             synth->setLFOfreq(*LFOfrequencyParam);
         }
     }
 }
 
+//adjusts the phase of the LFO depending on the current position of the playhead in the D.A.W
 void GuitarSynth_2AudioProcessor::setOSCphase(AudioPlayHead::CurrentPositionInfo bpm)
 {
+    //get BPM and calculate the lenght of one cycle
     double beatss = bpm.bpm;
+    //divide seconds / beats
     double phaseLenght = 60 / beatss;
     double timer = fmod(bpm.timeInSeconds,phaseLenght)/phaseLenght;
     synth->setPhaseLFO(timer);

@@ -14,17 +14,12 @@
 class InvertedSawWave : public Oscillator
 {
 public:
-    
-    //constructors and destructor
     InvertedSawWave(double samplerate);
     InvertedSawWave(double samplerate, double frequency);
     InvertedSawWave(double samplerate, double frequency, double phase);
     ~InvertedSawWave();
-    //prevent the default constructor to be generated
     InvertedSawWave() = delete;
     
-    //override calculate
-    //this method contains the sample calculation
     void calculate() override;
     
     

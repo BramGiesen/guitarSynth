@@ -29,6 +29,7 @@ RandomGenerator::~RandomGenerator()
 
 void RandomGenerator::calculate()
 {
+    //get random values to generate noise
     if(phase > 0.9 && notSet){
         randomValue = rand() % 100;
     }

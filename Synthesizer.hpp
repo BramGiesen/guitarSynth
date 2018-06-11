@@ -41,6 +41,7 @@ public:
     void mtof();
     double process();
 private:
+    //variables
     double LFO = 0.0;
     double LFOfreq;
     double LFOdepth;
@@ -63,8 +64,8 @@ private:
     float LFOP = 0.0;
     float lowpassParam = 0.0;
     
+    //bools
     bool initWaveForm;
-    
     bool setPhase = false;
     bool setPhaseSwitch = false;
     
@@ -74,8 +75,6 @@ private:
     
     //pointer array of type Oscillator
     Oscillator **oscillators;
-    
-    OnePole *lowPass;
     
     
 };

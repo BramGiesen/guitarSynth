@@ -25,12 +25,15 @@ double SignalAverage::getAverage()
 
 void SignalAverage::calculate(double signal)
 {
+    //get averige over n samples
     if( n <sampleInterval ){
+        //take absolute value of the signal
         absoluteSignal = std::abs(signal);
         addedResult = absoluteSignal + addedResult;
         n++;
     }else{
         n = 0;
+        //if n samples are added it gets divided by n samples(sample interval)
         averageSignal = addedResult / sampleInterval;
         addedResult = 0.0;
     }

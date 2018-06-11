@@ -15,13 +15,9 @@
 class NoiseOscillator : public Oscillator
 {
 public:
-    
-    //constructors and destructor
     NoiseOscillator();
     ~NoiseOscillator();
     
-    //override calculate
-    //this method contains the sample calculation
     void calculate() override;
     
     

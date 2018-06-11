@@ -17,10 +17,6 @@
 #include "biquad.hpp"
 #include "/Users/BramGiesen/aubio-0.4.5.darwin_framework/aubio.framework/Headers/aubio.h"
 #include "envelopeFollower.hpp"
-//#include "sineWave.hpp"
-//#include "noiseOscillator.hpp"
-//#include "sawWave.cpp"
-//#include "fallingSaw.hpp"
 #include "zerox.hpp"
 #include "selector.hpp"
 #include "signalAverage.hpp"
@@ -111,13 +107,9 @@ private:
     //variables
     
     //==FM===================
-    double modDepth = 10.0;
-    double ratio = 1.5;
     double fmFrequency = 0.0;
     double synthFrequency = 0.0;
-    double lowPassPitch = 0.0;
     double synthSample = 0.0;
-    double previousFrequency = 220.0;
     double oscillatorFreq = 0.0;
     
     //==FILTERS==============
@@ -125,7 +117,6 @@ private:
     float filterSignal2 = 0.0;
     float firstFilterSignal[15];
     float addedfilterSignal1;
-    float addedfilterSignal2;
     double lastSampleRate;
     
     //distortion
@@ -148,8 +139,9 @@ private:
     Oscillator **oscillators;
     Biquad **bandPassFilters;
     EnvelopeFollower **envelopeFollowers;
-    OnePole *lowPass = new OnePole(100.0 / 44100.0);
-    OnePole *envlowPass = new OnePole (1.0 / 44100.0);
+    OnePole *lowPass;
+    OnePole *envlowPass;
+    OnePole *LFOlowPass;
     
     //is used for ringbuffer: audioBufferPitch
     int x = 0;

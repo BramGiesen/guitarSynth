@@ -170,17 +170,6 @@ GuitarSynth_2AudioProcessorEditor::~GuitarSynth_2AudioProcessorEditor()
 {
 }
 
-#include <sstream>
-#include <iomanip>
-
-template <typename T>
-std::string to_string_with_precision(const T a_value, const int n)
-{
-    std::stringstream stream;
-    stream << std::fixed << std::setprecision(n) << a_value;
-    return stream.str();
-}
-
 //==============================================================================
 void GuitarSynth_2AudioProcessorEditor::paint (Graphics& g)
 {
@@ -216,7 +205,7 @@ void GuitarSynth_2AudioProcessorEditor::resized()
     r.removeFromTop (20);
     auto sliderArea = (r.removeFromTop (35));
     
-    //divide knobs in 
+    //divide knobs evenly over the with of the plugin screen
     auto bounds = getLocalBounds();
     auto knobSize = bounds.getWidth() / knobs.size();
 
