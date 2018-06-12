@@ -55,10 +55,10 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
 GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
 {
     //delete pointers
-    delete bandPassFilters;
+    delete[] bandPassFilters;
     bandPassFilters = nullptr;
     
-    delete envelopeFollowers;
+    delete[] envelopeFollowers;
     envelopeFollowers = nullptr;
     
     

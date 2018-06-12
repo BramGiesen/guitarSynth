@@ -22,7 +22,7 @@ Synth::Synth(double sampleRate)
 
 Synth::~Synth()
 {
-    delete oscillators;
+    delete[] oscillators;
     oscillators = nullptr;
 }
 
