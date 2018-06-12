@@ -7,6 +7,10 @@
 ###### signal flow:
 <img src="images/flowChart.jpg">
 
+
+Voordat ik aan deze plugin ben begonnen heb ik eerst een kleinere plugin gemaakt
+ <a href="https://bramgiesen.com/ringmodplugin.html">(hier te vinden)</a> om mij te verdiepen in JUCE en al wat zaken te testen zoals het implementeren van LFO's.
+
 ###### Filters:
 Voor de filter implementatie heb ik gekozen voor een biquad filter, direct form II. Deze filter werkt met twee delaybuffers. Voor de buffers gebruik ik een aantal vectors. Ik ben begonnen met een mono implementatie, dus waarbij je voor ieder stereo-kanaal twee buffers moest aanmaken. Nadat ik dit werkend had ben ik gaan nadenken hoe ik dit efficiënter kon maken.
 
