@@ -54,19 +54,23 @@ public:
 GuitarSynth_2AudioProcessorEditor::GuitarSynth_2AudioProcessorEditor (GuitarSynth_2AudioProcessor& owner)
 : AudioProcessorEditor (owner), processor (owner),
 timecodeDisplayLabel (String()),
-LFOglideLabel(String(), "LFO GLIDE :"),
-frequencyLabel (String(), "FREQUENCY :"),
-amplitudeLabel (String(), "DRY/WET :"),
-LFOfrequencyLabel (String(), "LFO FREQUENCY :"),
-LFOdepthLabel (String(), "LFO DEPTH :"),
-waveFormLabel (String(), "LFO WAVEFORM :"),
-fmRatioLabel (String(), "FM Ratio :"),
-fmModDepthLabel (String(), "FM Mod Depth :"),
-driveLabel (String(), "DRIVE :"),
-rangeLabel (String(), "RANGE :"),
-attackReleaseLabel (String(), "ATTACK-RELEASE:")
+LFOglideLabel(String(), "LFO GLIDE"),
+frequencyLabel (String(), "FREQUENCY"),
+amplitudeLabel (String(), "DRY/WET"),
+LFOfrequencyLabel (String(), "LFO FREQUENCY"),
+LFOdepthLabel (String(), "LFO DEPTH"),
+waveFormLabel (String(), "LFO WAVEFORM"),
+fmRatioLabel (String(), "FM RATIO"),
+fmModDepthLabel (String(), "FM MOD DEPTH"),
+driveLabel (String(), "DRIVE"),
+rangeLabel (String(), "RANGE"),
+attackReleaseLabel (String(), "ATTACK-RELEASE"),
+tuneLabel (String(), "TUNNING"),
+portamentoLabel (String(), "PORTAMENTO")
 {
     // add some sliders..
+    
+    float fontsize = 15.0f;
     
     addAndMakeVisible (waveFormBox);
     
@@ -80,6 +84,7 @@ attackReleaseLabel (String(), "ATTACK-RELEASE:")
     addAndMakeVisible (glideSlider = new ParameterSlider (*owner.glideParam));
     glideSlider-> setRange (0.0, 1.0, 0.0);
     glideSlider->setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
+    
     
     addAndMakeVisible (knobs.add (driveSlider = new ParameterSlider (*owner.driveParam)));
     driveSlider->setSliderStyle (Slider::Rotary);
@@ -119,42 +124,65 @@ attackReleaseLabel (String(), "ATTACK-RELEASE:")
     attackReleaseSlider-> setRange (0.0, 1.0, 0.0);
     attackReleaseSlider->setTextBoxStyle(juce::Slider::TextBoxBelow, true, 80, 20);
     
+    addAndMakeVisible (knobs.add (tuneSlider = new ParameterSlider (*owner.tuneParam)));
+    tuneSlider->setSliderStyle (Slider::Rotary);
+    tuneSlider-> setRange (0.0, 1.0, 0.0);
+    tuneSlider->setTextBoxStyle(juce::Slider::TextBoxBelow, true, 80, 20);
+    
+    addAndMakeVisible (knobs.add (portamentoSlider = new ParameterSlider (*owner.portamentoParam)));
+    portamentoSlider->setSliderStyle (Slider::LinearVertical);
+    portamentoSlider-> setRange (0.0, 1.0, 0.0);
+    portamentoSlider->setTextBoxStyle(juce::Slider::TextBoxBelow, true, 80, 20);
+    
     //ad Labels to the sliders
+    tuneLabel.attachToComponent(tuneSlider, false);
+    tuneLabel.setJustificationType (Justification::centredTop);
+    tuneLabel.setFont (Font (fontsize));
+    
+    portamentoLabel.attachToComponent (portamentoSlider, false);
+    portamentoLabel.setJustificationType (Justification::centredTop);
+    portamentoLabel.setFont (Font (fontsize));
+    
     fmRatioLabel.attachToComponent (fmRatioSlider, false);
-    fmRatioLabel.setFont (Font (11.0f));
+    fmRatioLabel.setJustificationType (Justification::centredTop);
+    fmRatioLabel.setFont (Font (fontsize));
     
     driveLabel.attachToComponent (driveSlider, false);
-    driveLabel.setFont (Font (11.0f));
+    driveLabel.setJustificationType (Justification::centredTop);
+    driveLabel.setFont (Font (fontsize));
     
     rangeLabel.attachToComponent (rangeSlider, false);
-    rangeLabel.setFont (Font (11.0f));
+    rangeLabel.setJustificationType (Justification::centredTop);
+    rangeLabel.setFont (Font (fontsize));
 
     fmModDepthLabel.attachToComponent (fmModDepthSlider, false);
-    fmModDepthLabel.setFont (Font (11.0f));
+    fmModDepthLabel.setJustificationType (Justification::centredTop);
+    fmModDepthLabel.setFont (Font (fontsize));
     
-    addAndMakeVisible (LFOglideLabel);
-    LFOglideLabel.setJustificationType (Justification::centredLeft);
-    LFOglideLabel.attachToComponent (glideSlider, true);
+    attackReleaseLabel.attachToComponent (attackReleaseSlider, false);
+    attackReleaseLabel.setJustificationType (Justification::centredTop);
+    attackReleaseLabel.setFont (Font (fontsize));
+    
+    LFOfrequencyLabel.attachToComponent (LFOfrequencySlider, false);
+    LFOfrequencyLabel.setJustificationType (Justification::centredTop);
+    LFOfrequencyLabel.setFont (Font (fontsize));
+    
+    LFOdepthLabel.attachToComponent (LFOdepthSlider, false);
+    LFOdepthLabel.setJustificationType (Justification::centredTop);
+    LFOdepthLabel.setFont (Font (fontsize));
     
     addAndMakeVisible (waveFormLabel);
     waveFormLabel.setJustificationType (Justification::centredLeft);
     waveFormLabel.attachToComponent (&waveFormBox, true);
     
-    attackReleaseLabel.attachToComponent (attackReleaseSlider, false);
-    attackReleaseLabel.setFont (Font (11.0f));
+    addAndMakeVisible (LFOglideLabel);
+    LFOglideLabel.setJustificationType (Justification::centredLeft);
+    LFOglideLabel.attachToComponent (glideSlider, true);
     
-    
-    LFOfrequencyLabel.attachToComponent (LFOfrequencySlider, false);
-    LFOfrequencyLabel.setFont (Font (11.0f));
-    
-    LFOdepthLabel.attachToComponent (LFOdepthSlider, false);
-    LFOdepthLabel.setFont (Font (11.0f));
-    
-    amplitudeLabel.attachToComponent (amplitudeSlider, false);
-    amplitudeLabel.setFont (Font (11.0f));
+
     
     // set resize limits for this plug-in
-    setResizeLimits (700, 200, 700, 200);
+    setResizeLimits (1000, 250, 1000, 250);
     
     // set our component's initial size to be the last one that was stored in the filter's settings
     setSize (owner.lastUIWidth,
@@ -173,9 +201,26 @@ GuitarSynth_2AudioProcessorEditor::~GuitarSynth_2AudioProcessorEditor()
 //==============================================================================
 void GuitarSynth_2AudioProcessorEditor::paint (Graphics& g)
 {
-    
+    getLookAndFeel().setDefaultSansSerifTypefaceName("phosphate");
     g.setColour(Colours::darkgrey);
     g.fillAll();
+    
+    auto rect = getLocalBounds();
+    g.setColour(Colours::dimgrey);
+    g.drawLine(0, 54, getWidth(), 54, 20);
+    
+    do {
+        for(int i = 0; i < 9; i++){
+             g.drawLine(getWidth()/9 * i, getHeight()-200, getWidth()/9 * i , getHeight(), 20);
+            i += 1;
+        }
+    }while (false);
+    g.drawLine(getWidth(), getHeight()-200, getWidth(), getHeight(), 20);
+    
+    g.drawLine(0, 250, getWidth(), 250 , 100);
+
+
+
     
     g.setColour(Colours::white);
     
@@ -184,6 +229,9 @@ void GuitarSynth_2AudioProcessorEditor::paint (Graphics& g)
     
     g.setFont(11.0f);
     g.setColour(Colours::white);
+    
+    
+ 
     
 }
 

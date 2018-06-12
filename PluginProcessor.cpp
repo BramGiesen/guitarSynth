@@ -35,18 +35,19 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
     lastPosInfo.resetToDefault();
     
     //add parameters, these are connected to the parameters in the PluginEditor.cpp(GUI)
-    addParameter (driveParam = new AudioParameterFloat ("DRIVE",  "DRIVE", 0.1f, 10.f, 0.1f));
-    addParameter (rangeParam = new AudioParameterFloat ("RANGE",  "RANGE", 0.1f, 10.f, 0.1f));
-    addParameter (fmRatioParam = new AudioParameterFloat ("FM_RATIO",  "FM_RATIO", 0.1f, 10.f, 0.1f));
-    addParameter (fmModDepthParam = new AudioParameterFloat ("FM_MOD_DEPTH",  "FM_MOD_DEPTH", 0.1f, 10.f, 0.1f));
+    addParameter (driveParam = new AudioParameterFloat ("DRIVE",  "DRIVE", 0.1f, 100.f, 0.1f));
+    addParameter (rangeParam = new AudioParameterFloat ("RANGE",  "RANGE", 0.1f, 100.f, 0.1f));
+    addParameter (fmRatioParam = new AudioParameterFloat ("FM_RATIO",  "FM_RATIO", 0.1f, 30.f, 0.1f));
+    addParameter (fmModDepthParam = new AudioParameterFloat ("FM_MOD_DEPTH",  "FM_MOD_DEPTH", 0.1f, 100.f, 0.1f));
     addParameter (glideParam = new AudioParameterFloat ("GLIDE",  "LFO_glide", 0.1f, 10.f, 0.1f));
     addParameter (attackReleaseParam  = new AudioParameterFloat ("ATTACK_RELEASE",  "ATTACK_RELEASE", 0.0f, 1200.0f, 0.9f));
-    addParameter (LFOfrequencyParam  = new AudioParameterFloat ("LFO_Frequency",  "LFO_Frequency", -10.0f, 10.0f,0.0f));
+    addParameter (LFOfrequencyParam  = new AudioParameterFloat ("LFO_Frequency",  "LFO_Frequency", 0.0f, 12000.0f,0.0f));
     addParameter (LFOdepthParam = new AudioParameterFloat ("LFO_depth", "LFO_depth", 0.0f, 100.0f, 0.5f));
     addParameter (waveFormParam   = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
-    addParameter (amplitudeParam = new AudioParameterFloat ("Dry_Wet", "Dry_Wet", 0.0f, 1.0f, 0.5f));
+    addParameter (tuneParam = new AudioParameterInt ("TUNNING", "TUNNING", -24, 24, 0));
+    addParameter (portamentoParam = new AudioParameterFloat ("PORTAMENTO", "PORTAMENTO", 0.5, 1000, 0));
     
-    
+
     //get `hop_s` new samples into `input`
     input->data = audioBufferPitch;
     
@@ -141,9 +142,10 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
     lastSampleRate = sampleRate;
     
     //create Low pass filters
-    lowPass = new OnePole(100.0 / sampleRate);
-    envlowPass = new OnePole (1.0 / sampleRate);
-    LFOlowPass = new OnePole (10.0 / sampleRate);
+    lowPass = new OnePole(100.0 / lastSampleRate);
+    envlowPass = new OnePole (1.0 / lastSampleRate);
+    LFOlowPass = new OnePole (10.0 / lastSampleRate);
+    portLowPass = new OnePole (100.0 / lastSampleRate);
     
     synth = new Synth(lastSampleRate);
     
@@ -248,6 +250,7 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             synth->setLFO(*waveFormParam);
             updateCurrentTimeInfoFromHost();
             updateSynth();
+            setLFO();
             
 
             
@@ -331,7 +334,7 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
         fmFrequency = (round(12*log2( mostDetected / 440 ) + 69));
         
         //converts MIDI-value to frequency that matches our western tuning system
-        synthFrequency = synth->mtof(fmFrequency);
+        synthFrequency = synth->mtof(fmFrequency + *tuneParam);
        
     }
 
@@ -395,6 +398,10 @@ void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
     
 }
 
+void GuitarSynth_2AudioProcessor::setLFO()
+{
+    synth->setLFO(*waveFormParam);
+}
 
 //sets frequency of the synth carrier, modulator and LFO
 void GuitarSynth_2AudioProcessor::setFrequency()
@@ -402,40 +409,41 @@ void GuitarSynth_2AudioProcessor::setFrequency()
     glide = *glideParam * -1 + 10.1;
     //if glide is set to 10 the lowPass filter is bypassed
     (glide < 10) ? LFO = lowPass->process(synth->getLFOsample()* *LFOdepthParam) : LFO = synth->getLFOsample()* *LFOdepthParam;
-    lowPass->setFc(glide/sampleRate);
+    lowPass->setFc(glide/lastSampleRate);
+    portLowPass->setFc(*portamentoParam/lastSampleRate);
+    synth->setLFOfreq(*LFOfrequencyParam);
+    synth->setFrequency(portLowPass->process(synthFrequency + (LFO * *LFOdepthParam)));
     
-    synth->setFrequency(synthFrequency + LFO);
-    
-    //takes a value out of array rateValues depending on de position of the *LFOfrequencyParam
-    if(*LFOfrequencyParam < 0){
-        LFOP = *LFOfrequencyParam - 1;
-        LFOI = int(*LFOfrequencyParam);
-        LFOf = rateValues[(LFOI * -1)];
-        syncfreq = beats/LFOf;
-        synth->setLFOfreq(syncfreq);
-        
-        
-        //check if the parameter has changed, if it hasn't changed it blocks the incomming stream to setOSCphase()
-        if(LFOI != previousLFOfreq){
-            if(!setPhaseSwitch){
-                setPhaseSwitch = true;
-                setOSCphase(lastPosInfo);
-            }
-            else{
-                
-                previousLFOfreq = LFOI;
-                setPhaseSwitch = false;
-            }
-        }
-        else {
-            previousLFOfreq = LFOI;
-        }
-    }else{
-        if(*LFOfrequencyParam < 0 && *LFOfrequencyParam > -0.5){ synth->setLFOfreq(0); }
-        else{
-            synth->setLFOfreq(*LFOfrequencyParam);
-        }
-    }
+//    //takes a value out of array rateValues depending on de position of the *LFOfrequencyParam
+////    if(*LFOfrequencyParam < 0){
+////        LFOP = *LFOfrequencyParam - 1;
+////        LFOI = int(*LFOfrequencyParam);
+////        LFOf = rateValues[(LFOI * -1)];
+////        syncfreq = beats/LFOf;
+////        synth->setLFOfreq(syncfreq);
+//
+//        synth->setLFOfreq(*LFOfrequencyParam);
+//        //check if the parameter has changed, if it hasn't changed it blocks the incomming stream to setOSCphase()
+//        if(LFOI != previousLFOfreq){
+//            if(!setPhaseSwitch){
+//                setPhaseSwitch = true;
+//                setOSCphase(lastPosInfo);
+//            }
+//            else{
+//
+//                previousLFOfreq = LFOI;
+//                setPhaseSwitch = false;
+//            }
+//        }
+//        else {
+//            previousLFOfreq = LFOI;
+//        }
+//
+//        if(*LFOfrequencyParam < 0 && *LFOfrequencyParam > -0.5){ synth->setLFOfreq(0); }
+//        else{
+//            synth->setLFOfreq(*LFOfrequencyParam);
+//        }
+//    }
 }
 
 //adjusts the phase of the LFO depending on the current position of the playhead in the D.A.W

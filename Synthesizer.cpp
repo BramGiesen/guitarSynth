@@ -117,6 +117,7 @@ double Synth::process()
     
     oscillators[0]->tick();
     oscillators[1]->tick();
+    oscillators[2]->tick();
    
     //get sample of the carrier
     sample = oscillators[0]->getSample();

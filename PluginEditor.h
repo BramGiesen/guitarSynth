@@ -35,15 +35,16 @@ private:
     void setBPM(AudioPlayHead::CurrentPositionInfo);
     class ParameterSlider;
     
+    int drawLine = 0;
     double beats = 0;
     
     GuitarSynth_2AudioProcessor& processor;
     
     //Labels
-    Label timecodeDisplayLabel, LFOglideLabel, frequencyLabel, amplitudeLabel, LFOfrequencyLabel, LFOdepthLabel, waveFormLabel, fmRatioLabel, fmModDepthLabel, driveLabel, rangeLabel, attackReleaseLabel;
+    Label timecodeDisplayLabel, LFOglideLabel, frequencyLabel, amplitudeLabel, LFOfrequencyLabel, LFOdepthLabel, waveFormLabel, fmRatioLabel, fmModDepthLabel, driveLabel, rangeLabel, attackReleaseLabel, tuneLabel, portamentoLabel;
     
     //Sliders
-    ScopedPointer<ParameterSlider> glideSlider, frequencySlider, amplitudeSlider, LFOfrequencySlider, LFOdepthSlider, fmRatioSlider, fmModDepthSlider, driveSlider, rangeSlider, attackReleaseSlider;
+    ScopedPointer<ParameterSlider> glideSlider, frequencySlider, amplitudeSlider, LFOfrequencySlider, LFOdepthSlider, fmRatioSlider, fmModDepthSlider, driveSlider, rangeSlider, attackReleaseSlider, tuneSlider, portamentoSlider;
     
     //arrays to put the sliders and knobs in
     OwnedArray<Slider> knobs;

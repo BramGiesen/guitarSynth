@@ -64,6 +64,8 @@ public:
     //==============================================================================
     void StartThread();
     
+    void setLFO();
+    
     void pitchDetect();
     float mtof(float aubiofreq);
     double  applyDistortion(double signal);
@@ -88,6 +90,7 @@ public:
     int lastUIWidth = 400, lastUIHeight = 200;
     
     // Our parameters
+
     AudioParameterFloat* glideParam = nullptr;
     AudioParameterFloat* driveParam = nullptr;
     AudioParameterFloat* rangeParam = nullptr;
@@ -97,7 +100,9 @@ public:
     AudioParameterFloat* amplitudeParam = nullptr;
     AudioParameterFloat* LFOfrequencyParam = nullptr;
     AudioParameterFloat* LFOdepthParam = nullptr;
-    AudioParameterChoice* waveFormParam;
+    AudioParameterChoice* waveFormParam = nullptr;
+    AudioParameterFloat* portamentoParam = nullptr;
+    AudioParameterInt* tuneParam = nullptr;
     
     
     // Current track colour and name
@@ -142,6 +147,7 @@ private:
     OnePole *lowPass;
     OnePole *envlowPass;
     OnePole *LFOlowPass;
+    OnePole *portLowPass;
     
     //is used for ringbuffer: audioBufferPitch
     int x = 0;
