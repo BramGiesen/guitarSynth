@@ -148,7 +148,7 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
     synth = new Synth(lastSampleRate);
     
     //create a list of biquad objects
-    int numberOfBiquads = 60;
+    int numberOfBiquads = 30;
     bandPassFilters = new Biquad*[numberOfBiquads];
     
     //create 60 bandpasses 4 * 15 different frequency's
@@ -252,9 +252,9 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 
             
             //Synth signal gets filtered and is multiplied with envelope follower values that where calculated earlier
-            for (int filterIndex = 30; filterIndex < 45; filterIndex++){
+            for (int filterIndex = 15; filterIndex < 30; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
-                addedfilterSignal1 = filterSignal * ( envFollowValues[filterIndex-30]) + addedfilterSignal1;
+                addedfilterSignal1 = filterSignal * ( envFollowValues[filterIndex-15]) + addedfilterSignal1;
             }
 
             //send data to correct channel
