@@ -21,7 +21,7 @@ channelBuffers[channel][delayBuffer][delay];
 
 ```
 
-Ik had eerst een implementatie waarbij het geluid dubbel werd gefilterd, hierdoor werd het erg zacht, hierdoor moest ik het heel erg versterken, uiteindelijk heb ik ervoor gekozen om minder filters te gebruiken en nu klinkt het harder en ook een stuk beter. 
+Ik had eerst een implementatie waarbij het geluid dubbel werd gefilterd, hierdoor werd het erg zacht, hierdoor moest ik het heel erg versterken, uiteindelijk heb ik ervoor gekozen om minder filters te gebruiken en nu klinkt het harder en ook een stuk beter.
 
 ###### for loops:
 
@@ -76,6 +76,10 @@ Aubio pakte de frequenties redelijk goed maar er zaten wel pieken en dalen in de
 hiernaast waren er ook nog andere kleinere fluctuaties alsmede dat de pitches die aubio terug geeft niet stemmingssysteem gebonden zijn dus passen zij ook niet allemaal in ons westers stemmingssysteem. Om dit op te lossen reken ik de frequenties van aubio eerst om naar de MIDI-nootwaarde waar de frequentie het dichst bij zit. Hierna geef ik die MIDI-nootwaarde door aan een mtof functie die het weer omzet naar de juiste frequentie.
 
 Om de fluctuaties tegen te gaan schrijf ik de gedetecteerde pitches weg in een array en wordt er iedere 200 samples gekeken welke pitch er het meeste in de array voorkwam en deze wordt dan doorgeven aan de synth.
+
+###### dynamiek en distortion:
+
+Het geluid heeft nog wat pieken wat betreft de amplitude, ik denk dat ik dit kan oplossen door een clip op de envelope follower output te zetten. Voor de distortion gebruik ik nu een soft clip systeem maar ik ga nog kijken hoe het klinkt met hard clipping distortion omdat ik denk dat zo'n karakteristiek goed bij dit effect kan passen.
 
 ###### GUI:
 
