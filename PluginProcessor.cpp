@@ -69,7 +69,7 @@ GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
 //    del_fvec (input);
     aubio_cleanup ();
     
-    if(pitchDetectThread.joinable()) pitchDetectThread.join();
+//    if(pitchDetectThread.joinable()) pitchDetectThread.join();
     delete oscillators;
     oscillators = nullptr;
 }
@@ -411,39 +411,39 @@ void GuitarSynth_2AudioProcessor::setFrequency()
     (glide < 10) ? LFO = lowPass->process(synth->getLFOsample()* *LFOdepthParam) : LFO = synth->getLFOsample()* *LFOdepthParam;
     lowPass->setFc(glide/lastSampleRate);
     portLowPass->setFc(*portamentoParam/lastSampleRate);
-    synth->setLFOfreq(*LFOfrequencyParam);
     synth->setFrequency(portLowPass->process(synthFrequency + (LFO * *LFOdepthParam)));
     
-//    //takes a value out of array rateValues depending on de position of the *LFOfrequencyParam
-////    if(*LFOfrequencyParam < 0){
-////        LFOP = *LFOfrequencyParam - 1;
-////        LFOI = int(*LFOfrequencyParam);
-////        LFOf = rateValues[(LFOI * -1)];
-////        syncfreq = beats/LFOf;
-////        synth->setLFOfreq(syncfreq);
-//
-//        synth->setLFOfreq(*LFOfrequencyParam);
-//        //check if the parameter has changed, if it hasn't changed it blocks the incomming stream to setOSCphase()
-//        if(LFOI != previousLFOfreq){
-//            if(!setPhaseSwitch){
-//                setPhaseSwitch = true;
-//                setOSCphase(lastPosInfo);
-//            }
-//            else{
-//
-//                previousLFOfreq = LFOI;
-//                setPhaseSwitch = false;
-//            }
-//        }
-//        else {
-//            previousLFOfreq = LFOI;
-//        }
-//
-//        if(*LFOfrequencyParam < 0 && *LFOfrequencyParam > -0.5){ synth->setLFOfreq(0); }
-//        else{
-//            synth->setLFOfreq(*LFOfrequencyParam);
-//        }
-//    }
+    //takes a value out of array rateValues depending on de position of the *LFOfrequencyParam
+    if(*LFOfrequencyParam < 0){
+        LFOP = *LFOfrequencyParam - 1;
+        LFOI = int(*LFOfrequencyParam);
+        //takes rate value from array to get the correct frequency
+        LFOf = rateValues[(LFOI * -1)];
+        syncfreq = beats/LFOf;
+        synth->setLFOfreq(syncfreq);
+
+        synth->setLFOfreq(*LFOfrequencyParam);
+        //check if the parameter has changed, if it hasn't changed it blocks the incomming stream to setOSCphase()
+        if(LFOI != previousLFOfreq){
+            if(!setPhaseSwitch){
+                setPhaseSwitch = true;
+                setOSCphase(lastPosInfo);
+            }
+            else{
+
+                previousLFOfreq = LFOI;
+                setPhaseSwitch = false;
+            }
+        }
+        else {
+            previousLFOfreq = LFOI;
+        }
+
+        if(*LFOfrequencyParam < 0 && *LFOfrequencyParam > -0.5){ synth->setLFOfreq(0); }
+        else{
+            synth->setLFOfreq(*LFOfrequencyParam);
+        }
+    }
 }
 
 //adjusts the phase of the LFO depending on the current position of the playhead in the D.A.W
