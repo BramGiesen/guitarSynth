@@ -21,7 +21,7 @@ channelBuffers[channel][delayBuffer][delay];
 
 ```
 
-De filters maken het geluid op het moment wel heel erg zacht, dus ik denk dat ik nog wat aan de gain moet draaien. Ik moet nu de envFollower versterken met 1000.
+Ik had eerst een implementatie waarbij het geluid dubbel werd gefilterd, hierdoor werd het erg zacht, hierdoor moest ik het heel erg versterken, uiteindelijk heb ik ervoor gekozen om minder filters te gebruiken en nu klinkt het harder en ook een stuk beter. 
 
 ###### for loops:
 
