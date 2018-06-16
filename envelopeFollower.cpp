@@ -35,6 +35,8 @@ double EnvelopeFollower::process(double signal)
     averageSignal = svg->getAverage();
     //low pass the averige signal, to make it smoother. I also use the low pass to adjust the attack and release of the synth
     envelope = lowPass->process(averageSignal);
-
-    return envelope * 100.0;
+    envelope *= 100.0;
+    envelope = (envelope > 0.01) ? 0.01 : envelope;
+//    std::cout << "envelope = " << envelope << std::endl;
+    return envelope;
 }

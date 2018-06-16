@@ -10,6 +10,10 @@
 
 #include <thread>
 
+#include <cstdint>
+#include <algorithm>
+#include <iomanip>
+
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "/Users/BramGiesen/Documents/HKU/aubio-0.4.5.darwin_framework/aubio.framework/Headers/aubio.h"
@@ -37,14 +41,14 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
     //add parameters, these are connected to the parameters in the PluginEditor.cpp(GUI)
     addParameter (driveParam = new AudioParameterFloat ("DRIVE",  "DRIVE", 0.1f, 100.f, 0.1f));
     addParameter (rangeParam = new AudioParameterFloat ("RANGE",  "RANGE", 0.1f, 100.f, 0.1f));
-    addParameter (fmRatioParam = new AudioParameterFloat ("FM_RATIO",  "FM_RATIO", 0.1f, 30.f, 0.1f));
-    addParameter (fmModDepthParam = new AudioParameterFloat ("FM_MOD_DEPTH",  "FM_MOD_DEPTH", 0.1f, 100.f, 0.1f));
+    addParameter (fmRatioParam = new AudioParameterFloat ("FM_RATIO",  "FM_RATIO", 0.0f, 30.f, 0.10));
+    addParameter (fmModDepthParam = new AudioParameterFloat ("FM_MOD_DEPTH",  "FM_MOD_DEPTH", 0.0f, 100.f, 0.0f));
     addParameter (glideParam = new AudioParameterFloat ("GLIDE",  "LFO_glide", 0.1f, 10.f, 0.1f));
     addParameter (attackReleaseParam  = new AudioParameterFloat ("ATTACK_RELEASE",  "ATTACK_RELEASE", 0.0f, 1200.0f, 0.9f));
     addParameter (LFOfrequencyParam  = new AudioParameterFloat ("LFO_Frequency",  "LFO_Frequency", 0.0f, 12000.0f,0.0f));
     addParameter (LFOdepthParam = new AudioParameterFloat ("LFO_depth", "LFO_depth", 0.0f, 100.0f, 0.5f));
     addParameter (waveFormParam   = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
-    addParameter (tuneParam = new AudioParameterInt ("TUNNING", "TUNNING", -24, 24, 0));
+    addParameter (tuneParam = new AudioParameterInt ("TUNNING", "TUNNING", -48, 84, 0));
     addParameter (portamentoParam = new AudioParameterFloat ("PORTAMENTO", "PORTAMENTO", 0.5, 1000, 0));
 //
 
@@ -73,13 +77,6 @@ GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
 
     delete[] envelopeFollowers;
     envelopeFollowers = nullptr;
-
-    
-    //clean up aubio
-//    del_aubio_pitch (o);
-//    del_fvec (out);
-//    del_fvec (input);
-//    aubio_cleanup ();
     
 }
 
@@ -266,8 +263,9 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             //Synth signal gets filtered and is multiplied with envelope follower values that where calculated earlier
             for (int filterIndex = 15; filterIndex < 30; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
-                addedfilterSignal1 = filterSignal * ( envFollowValues[filterIndex-15]) + addedfilterSignal1;
+                addedfilterSignal1 = filterSignal * (envFollowValues[filterIndex-15]) + addedfilterSignal1;
             }
+            
 
             //send data to correct channel
             channelData[sample] = addedfilterSignal1 + ( envFollowValues[10] * applyDistortion(synthSample));
@@ -281,8 +279,8 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 //gets value's from GUI and sends it to the synthesizer
 void GuitarSynth_2AudioProcessor::updateSynth()
 {
-//    synth->setRatio(*fmRatioParam);
-//    synth->setModDepth(*fmModDepthParam);
+    synth->setRatio(*fmRatioParam);
+    synth->setModDepth(*fmModDepthParam);
 }
 //==============================================================================
 bool GuitarSynth_2AudioProcessor::hasEditor() const
@@ -419,6 +417,7 @@ void GuitarSynth_2AudioProcessor::setFrequency()
     (glide < 10) ? LFO = lowPass->process(synth->getLFOsample()* *LFOdepthParam) : LFO = synth->getLFOsample()* *LFOdepthParam;
     lowPass->setFc(glide/lastSampleRate);
     portLowPass->setFc(*portamentoParam/lastSampleRate);
+    
     synth->setFrequency(portLowPass->process(synthFrequency + (LFO * *LFOdepthParam)));
 
     //takes a value out of array rateValues depending on de position of the *LFOfrequencyParam

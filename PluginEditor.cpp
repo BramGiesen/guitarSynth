@@ -143,7 +143,7 @@ portamentoLabel (String(), "PORTAMENTO")
     addAndMakeVisible ( fmRatioSlider = new ParameterSlider (*owner.fmRatioParam));
     fmRatioSlider->setSliderStyle (Slider::Rotary);
     fmRatioSlider-> setRange (0.0, 1.0, 0.0);
-    fmRatioSlider->setTextBoxStyle(juce::Slider::TextBoxBelow, true, 80, 20);
+    fmRatioSlider->setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
     //3
     addAndMakeVisible ( fmModDepthSlider = new ParameterSlider (*owner.fmModDepthParam));
     fmModDepthSlider->setSliderStyle (Slider::Rotary);
