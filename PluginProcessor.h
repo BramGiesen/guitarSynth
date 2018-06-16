@@ -90,7 +90,6 @@ public:
     int lastUIWidth = 400, lastUIHeight = 200;
     
     // Our parameters
-
     AudioParameterFloat* glideParam = nullptr;
     AudioParameterFloat* driveParam = nullptr;
     AudioParameterFloat* rangeParam = nullptr;
@@ -103,39 +102,39 @@ public:
     AudioParameterChoice* waveFormParam = nullptr;
     AudioParameterFloat* portamentoParam = nullptr;
     AudioParameterInt* tuneParam = nullptr;
-    
+
     
     // Current track colour and name
     TrackProperties trackProperties;
 private:
-    
+
     //variables
-    
+
     //==FM===================
     double fmFrequency = 0.0;
     double synthFrequency = 0.0;
     double synthSample = 0.0;
     double oscillatorFreq = 0.0;
-    
+
     //==FILTERS==============
     float filterSignal1 = 0.0;
     float filterSignal2 = 0.0;
     float firstFilterSignal[15];
     float addedfilterSignal1;
     double lastSampleRate;
-    
+
     //distortion
     double drive = 1;
     double range = 1;
     double signalDistortion = 0;
     double blend = 1;
-    
+
     //vectors & arrays========
     std::vector<double> envFollowValues;
     std::vector<double> filterFreqs = {175.0,220.0,265.0,345.0,550.0,700.0,880.0,1000.0, 1100.0, 1400.0, 1750.0,2300.0,2950.0, 3500.0, 4300.0};
+
     
-    
-    //objects=================
+   //objects=================
     Zerox zerox;
     Selector selector;
     
@@ -158,6 +157,7 @@ private:
     float audioBufferPitch[(4096/4)];
     
     //variables
+    
     uint_t win_s = 4096.0; // window size
     uint_t hop_s = win_s / 4.0; // hop size
     smpl_t pitchdetected = 0.0;
@@ -176,6 +176,8 @@ private:
     double detectedPitches[20000];
     double mostDetected = 0;
     
+    bool pitchDetectDo = true;
+    
     //pitch detection thread
     std::thread pitchDetectThread;
     
@@ -191,13 +193,13 @@ private:
     float syncfreq = 0;
     float beats = 120;
     double startLoop = 0;
-    
+
     int LFOI = 0;
     float LFOf = 0;
     float previousLFOfreq = 0;
     float LFOP = 0;
     float lowpassParam = 0;
-    
+
     bool startTimeSet = false;
     bool initWaveform = false;
     bool setPhase = false;

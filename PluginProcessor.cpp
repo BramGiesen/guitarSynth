@@ -31,7 +31,7 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
     for(int i = 0; i < lenghtOfAudioBuffer; i++){
         audioBufferPitch[i] = 0;
     }
-    
+
     lastPosInfo.resetToDefault();
     
     //add parameters, these are connected to the parameters in the PluginEditor.cpp(GUI)
@@ -46,8 +46,9 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
     addParameter (waveFormParam   = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
     addParameter (tuneParam = new AudioParameterInt ("TUNNING", "TUNNING", -24, 24, 0));
     addParameter (portamentoParam = new AudioParameterFloat ("PORTAMENTO", "PORTAMENTO", 0.5, 1000, 0));
-    
+//
 
+   
     //get `hop_s` new samples into `input`
     input->data = audioBufferPitch;
     
@@ -55,23 +56,31 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
 
 GuitarSynth_2AudioProcessor::~GuitarSynth_2AudioProcessor()
 {
+    pitchDetectDo = false;
+    
+    if(pitchDetectThread.joinable()) pitchDetectThread.join();
+
+    input->data = nullptr;
+    
+    del_aubio_pitch (o);
+    del_fvec (out);
+    del_fvec (input);
+    aubio_cleanup ();
+    
     //delete pointers
     delete[] bandPassFilters;
     bandPassFilters = nullptr;
-    
+
     delete[] envelopeFollowers;
     envelopeFollowers = nullptr;
-    
+
     
     //clean up aubio
-    del_aubio_pitch (o);
-    del_fvec (out);
+//    del_aubio_pitch (o);
+//    del_fvec (out);
 //    del_fvec (input);
-    aubio_cleanup ();
+//    aubio_cleanup ();
     
-//    if(pitchDetectThread.joinable()) pitchDetectThread.join();
-    delete oscillators;
-    oscillators = nullptr;
 }
 
 //==============================================================================
@@ -140,32 +149,32 @@ void GuitarSynth_2AudioProcessor::changeProgramName (int index, const String& ne
 void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     lastSampleRate = sampleRate;
-    
+
     //create Low pass filters
     lowPass = new OnePole(100.0 / lastSampleRate);
     envlowPass = new OnePole (1.0 / lastSampleRate);
     LFOlowPass = new OnePole (10.0 / lastSampleRate);
     portLowPass = new OnePole (100.0 / lastSampleRate);
-    
+
     synth = new Synth(lastSampleRate);
-    
+
     //create a list of biquad objects
     int numberOfBiquads = 30;
     bandPassFilters = new Biquad*[numberOfBiquads];
-    
+
     //create 60 bandpasses 4 * 15 different frequency's
     for (int i = 0; i < numberOfBiquads; i++){
         bandPassFilters[i] = new Biquad(1.0, filterFreqs[i % 15] / lastSampleRate, 46.0);
     }
-    
+
     //list for the envelope follower objects
     envelopeFollowers = new EnvelopeFollower*[15];
-    
+
     //create 15 envelope followers
     for (int i = 0; i < 15; i++){
         envelopeFollowers[i] = new EnvelopeFollower;
     }
-    
+
     //start aubio pitch detection thread
     StartThread();
 
@@ -215,19 +224,19 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 
     // get numsamples
     for(int sample = 0; sample < buffer.getNumSamples(); ++sample){
-    
+
     //load samples in buffer that is linked to aubio buffer
     audioBufferPitch[x++ % lenghtOfAudioBuffer] = buffer.getSample(0, sample);
-       
+
         for (int channel = 0; channel< totalNumInputChannels; ++channel)
         {
             //get pointer to write data to the correct channel
             auto channelData = buffer.getWritePointer (channel);
-            
+
             //get sample from JUCE buffer
             float  signal = buffer.getSample(channel, sample);
-            
-            
+
+
             //filter the signal with 15 bandpass filters and calculate the envelope for each filter band.
             for (int filterIndex = 0; filterIndex < 15; filterIndex++){
                 filterSignal1 = bandPassFilters[filterIndex]->process(channel, signal);
@@ -237,7 +246,7 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 
             //zerox analysis, checks how many times the signal crosses the zero line.
             zerox.calculate(signal);
-            
+
             //depending on the amount of crossings, the synthsample changes from a harmonic to a disharmonic sound(noise)
             int oscIndex = zerox.getZerox() - 1;
 
@@ -251,9 +260,9 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             updateCurrentTimeInfoFromHost();
             updateSynth();
             setLFO();
-            
 
-            
+
+
             //Synth signal gets filtered and is multiplied with envelope follower values that where calculated earlier
             for (int filterIndex = 15; filterIndex < 30; filterIndex++){
                 float filterSignal = bandPassFilters[filterIndex]->process(channel, synthSample);
@@ -262,7 +271,7 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 
             //send data to correct channel
             channelData[sample] = addedfilterSignal1 + ( envFollowValues[10] * applyDistortion(synthSample));
-            
+
             //empty the added  filter signals
             addedfilterSignal1 = 0;
         }
@@ -272,8 +281,8 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
 //gets value's from GUI and sends it to the synthesizer
 void GuitarSynth_2AudioProcessor::updateSynth()
 {
-    synth->setRatio(*fmRatioParam);
-    synth->setModDepth(*fmModDepthParam);
+//    synth->setRatio(*fmRatioParam);
+//    synth->setModDepth(*fmModDepthParam);
 }
 //==============================================================================
 bool GuitarSynth_2AudioProcessor::hasEditor() const
@@ -283,7 +292,7 @@ bool GuitarSynth_2AudioProcessor::hasEditor() const
 
 AudioProcessorEditor* GuitarSynth_2AudioProcessor::createEditor()
 {
-    return new GuitarSynth_2AudioProcessorEditor (*this);
+    return new GuitarSynth_2AudioProcessorEditor (*this);   
 }
 
 void GuitarSynth_2AudioProcessor::StartThread(){
@@ -293,23 +302,23 @@ void GuitarSynth_2AudioProcessor::StartThread(){
 
 void GuitarSynth_2AudioProcessor::pitchDetect()
 {
-    while (true){
+    while (pitchDetectDo){
         //exectute pitch detection
         aubio_pitch_do (o, input, out);
-        
+
         //put detected pitch in a variable
         smpl_t pitchdetected = fvec_get_sample(out, 0);
-        
+
         //size of the buffer with detected pitches
         int detectSize = 200;
-        
+
         for (int i = 0; i <detectSize; i++){
             detectedPitches[i] = pitchdetected;
         }
-        
+
         //look for number(pitch) that appears the most in the array of detected pitches
         int max_count = 0;
-        
+
         for (int i=0;i<detectSize;i++)
         {
             int count=1;
@@ -319,7 +328,7 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
             if (count>max_count)
                 max_count = count;
         }
-        
+
         for (int i=0;i<detectSize;i++)
         {
             int count=1;
@@ -329,15 +338,14 @@ void GuitarSynth_2AudioProcessor::pitchDetect()
             if (count==max_count)
                 mostDetected = detectedPitches[i];
         }
-        
+
         //convert hertz to closest MIDI-value
         fmFrequency = (round(12*log2( mostDetected / 440 ) + 69));
-        
+
         //converts MIDI-value to frequency that matches our western tuning system
         synthFrequency = synth->mtof(fmFrequency + *tuneParam);
-       
-    }
 
+    }
 }
 
 //distortion effect
@@ -349,7 +357,7 @@ double GuitarSynth_2AudioProcessor::applyDistortion(double signal)
     signalDistortion = signal * drive *  range;
     //clip the signal
     signalDistortion *= (2.f / float_Pi) * atan(signalDistortion);
-    
+
     return signal + signalDistortion;
 }
 
@@ -359,14 +367,14 @@ void GuitarSynth_2AudioProcessor::updateCurrentTimeInfoFromHost()
     if (AudioPlayHead* ph = getPlayHead())
     {
         AudioPlayHead::CurrentPositionInfo newTime;
-        
+
         if (ph->getCurrentPosition (newTime))
         {
             lastPosInfo = newTime;
             return;
         }
     }
-    
+
     lastPosInfo.resetToDefault();
 }
 
@@ -374,7 +382,7 @@ void GuitarSynth_2AudioProcessor::updateCurrentTimeInfoFromHost()
 void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
 {
     beats = bpm.bpm;
-    
+
     if(bpm.isLooping && (bpm.isPlaying || bpm.isRecording)){
         if(!startTimeSet){
             startLoop = bpm.timeInSeconds;
@@ -383,7 +391,7 @@ void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
         if(bpm.timeInSeconds == startLoop)
             setOSCphase(bpm);
     }
-    
+
     if (bpm.isPlaying){
         if(!setPhase){
             setPhase = true;
@@ -394,7 +402,7 @@ void GuitarSynth_2AudioProcessor::setBPM(AudioPlayHead::CurrentPositionInfo bpm)
         setPhase = false;
         startTimeSet = false;
     }
-    
+
     
 }
 
@@ -412,7 +420,7 @@ void GuitarSynth_2AudioProcessor::setFrequency()
     lowPass->setFc(glide/lastSampleRate);
     portLowPass->setFc(*portamentoParam/lastSampleRate);
     synth->setFrequency(portLowPass->process(synthFrequency + (LFO * *LFOdepthParam)));
-    
+
     //takes a value out of array rateValues depending on de position of the *LFOfrequencyParam
     if(*LFOfrequencyParam < 0){
         LFOP = *LFOfrequencyParam - 1;
@@ -464,11 +472,11 @@ void GuitarSynth_2AudioProcessor::getStateInformation (MemoryBlock& destData)
     
     // Create an outer XML element..
     XmlElement xml ("RMSETTINGS");
-    
+
     // add some attributes to it..
     xml.setAttribute ("uiWidth", lastUIWidth);
     xml.setAttribute ("uiHeight", lastUIHeight);
-    
+
     // Store the values of all our parameters, using their param ID as the XML attribute
     for (auto* param : getParameters()){
         if (auto* p = dynamic_cast<AudioProcessorParameterWithID*> (param)){
@@ -485,7 +493,7 @@ void GuitarSynth_2AudioProcessor::setStateInformation (const void* data, int siz
 {
     // This getXmlFromBinary() helper function retrieves our XML from the binary blob..
     ScopedPointer<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
-    
+
     if (xmlState != nullptr)
     {
         // make sure that it's actually our type of XML object..
@@ -494,7 +502,7 @@ void GuitarSynth_2AudioProcessor::setStateInformation (const void* data, int siz
             // ok, now pull out our last window size..
             lastUIWidth  = jmax (xmlState->getIntAttribute ("uiWidth", lastUIWidth), 400);
             lastUIHeight = jmax (xmlState->getIntAttribute ("uiHeight", lastUIHeight), 200);
-            
+
             // Now reload our parameters..
             for (auto* param : getParameters())
                 if (auto* p = dynamic_cast<AudioProcessorParameterWithID*> (param))
