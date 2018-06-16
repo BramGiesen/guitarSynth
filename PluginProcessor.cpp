@@ -44,11 +44,11 @@ GuitarSynth_2AudioProcessor::GuitarSynth_2AudioProcessor()
     addParameter (fmRatioParam = new AudioParameterFloat ("FM_RATIO",  "FM_RATIO", 0.0f, 30.f, 0.10));
     addParameter (fmModDepthParam = new AudioParameterFloat ("FM_MOD_DEPTH",  "FM_MOD_DEPTH", 0.0f, 100.f, 0.0f));
     addParameter (glideParam = new AudioParameterFloat ("GLIDE",  "LFO_glide", 0.1f, 10.f, 0.1f));
-    addParameter (attackReleaseParam  = new AudioParameterFloat ("ATTACK_RELEASE",  "ATTACK_RELEASE", 0.0f, 1200.0f, 0.9f));
+    addParameter (attackReleaseParam  = new AudioParameterFloat ("ATTACK_RELEASE",  "ATTACK_RELEASE", 0.01f, 10.0f, 10.0f));
     addParameter (LFOfrequencyParam  = new AudioParameterFloat ("LFO_Frequency",  "LFO_Frequency", 0.0f, 12000.0f,0.0f));
     addParameter (LFOdepthParam = new AudioParameterFloat ("LFO_depth", "LFO_depth", 0.0f, 100.0f, 0.5f));
     addParameter (waveFormParam   = new AudioParameterChoice ("Wave_form", "LFO_wave form", { "rising saw", "falling saw", "sine", "square", "noise generator" }, 4));
-    addParameter (tuneParam = new AudioParameterInt ("TUNNING", "TUNNING", -48, 84, 0));
+    addParameter (tuneParam = new AudioParameterInt ("TUNNING", "TUNNING", -48, 48, 0));
     addParameter (portamentoParam = new AudioParameterFloat ("PORTAMENTO", "PORTAMENTO", 0.5, 1000, 0));
 //
 
@@ -257,6 +257,7 @@ void GuitarSynth_2AudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiB
             updateCurrentTimeInfoFromHost();
             updateSynth();
             setLFO();
+//            setAttackRelease(*attackReleaseParam);
 
 
 
@@ -281,6 +282,17 @@ void GuitarSynth_2AudioProcessor::updateSynth()
 {
     synth->setRatio(*fmRatioParam);
     synth->setModDepth(*fmModDepthParam);
+}
+
+void GuitarSynth_2AudioProcessor::setAttackRelease(double attackRelease)
+{
+    if(attackRelease != previousAttackRelease)
+    {
+        for(int index = 0; index < 15; index++){
+            envelopeFollowers[index]->setAttackReleaseValue(attackRelease);
+        }
+        previousAttackRelease =  attackRelease;
+    }
 }
 //==============================================================================
 bool GuitarSynth_2AudioProcessor::hasEditor() const

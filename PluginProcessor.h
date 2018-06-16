@@ -64,6 +64,7 @@ public:
     //==============================================================================
     void StartThread();
     
+    void setAttackRelease(double attackRelease);
     void setLFO();
     
     void pitchDetect();
@@ -109,7 +110,7 @@ public:
 private:
 
     //variables
-
+    double  previousAttackRelease = 0;
     //==FM===================
     double fmFrequency = 0.0;
     double synthFrequency = 0.0;

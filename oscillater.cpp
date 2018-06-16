@@ -13,7 +13,12 @@ Oscillator::~Oscillator()
     
 }
 
-double Oscillator::getSample() { return sample; }
+double Oscillator::getSample()
+{
+//    sample  = (frequency == 0) ? 0 : sample;
+    return sample;
+    
+}
 
 void Oscillator::tick()
 {
