@@ -108,3 +108,12 @@ Het geluid heeft nog wat pieken wat betreft de amplitude, ik denk dat ik dit kan
 ###### GUI:
 
 Ik had in mijn oorspronkelijke GUI de parameters aangemaakt in for loops en in verschillende structs, hiermee word de GUI in verschillende vlakken onderverdeeld. Hoewel dit een mooier systeem was heb ik dit voor nu laten zitten in verband met de tijd. De GUI zelf stond al maar hij moest nog gekoppeld worden aan de processor class van JUCE. Omdat ik nog niet had uitgezocht hoe ik dit precies moest doen dacht ik dat het toch iets te veel tijd zou gaan kosten. Hierom heb ik gekozen om te gaan voor een vergelijkbare GUI die ik al in een eerder project had gebruikt omdat ik hierbij precies wist hoe ik het moest coderen.
+
+###### Vervolgstappen:
+
+Ik vond dit een geslaagd in interessant project. Ik ga er wel nog zelf verder mee aan de slag om bepaalde zaken nog te verfijnen.
+
+* buffers van verschillende grote gebruiken voor de aubio pitch-detectie.
+Zo kan de latency bij hoge noten worden verkleind.
+* Attack en release envelope maken. Nu kan ik deze twee parameters aanpassen door de lowpass frequentie op het amplitude signaal aan te passen. Maar ik ga hier nog een echte envelope class voor schrijven met onset detectie.
+* In z'n algemeen de parameters optimaliseren, onderzoeken wat het beste resultaat geeft.  
