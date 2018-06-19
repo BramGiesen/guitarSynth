@@ -7,10 +7,8 @@
 
 #include "Synthesizer.hpp"
 
-Synth::Synth(double sampleRate)
+Synth::Synth(double sampleRate) : sampleRate(sampleRate)
 {
-    this->sampleRate = sampleRate;
-
     oscillators = new Oscillator*[3];
     
     //create a carrier a modulator and a noise oscillator

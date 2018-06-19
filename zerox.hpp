@@ -27,7 +27,6 @@ private:
     double phase = 0.0;
     double zeroxOut = 1.0;
     double count = 0.0;
-    int samplerate = 44100.0;
     double signalVectorSize = 128.0;
     int n = 0;
 };

@@ -15,17 +15,17 @@
 class EnvelopeFollower
 {
 public:
-    EnvelopeFollower();
+    EnvelopeFollower(double sampleRate);
     ~EnvelopeFollower();
     double process(double signal);
     void setAttackReleaseValue(double frequency);
 private:
+    double sampleRate;
     double signal = 0.0;
     double envelope = 0.0;
     double averageSignal = 0.0;
-    OnePole *lowPass = new OnePole(10 / 44100.0);
-    SignalAverage *svg = new SignalAverage(20.0);
-    
+    OnePole *lowPass;
+    SignalAverage *svg;
 };
 
 #endif /* envelopeFollower_hpp */

@@ -169,7 +169,7 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
 
     //create 15 envelope followers
     for (int i = 0; i < 15; i++){
-        envelopeFollowers[i] = new EnvelopeFollower;
+        envelopeFollowers[i] = new EnvelopeFollower(lastSampleRate);
     }
 
     //start aubio pitch detection thread

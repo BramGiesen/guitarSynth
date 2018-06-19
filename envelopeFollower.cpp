@@ -9,9 +9,10 @@
 #include "envelopeFollower.hpp"
 #include <iostream>
 
-EnvelopeFollower::EnvelopeFollower()
+EnvelopeFollower::EnvelopeFollower(double sampleRate) : sampleRate(sampleRate)
 {
-    
+    lowPass = new OnePole(10 /  sampleRate);
+    svg = new SignalAverage(20.0);
 }
  EnvelopeFollower::~EnvelopeFollower()
 {
