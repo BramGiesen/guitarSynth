@@ -1,6 +1,12 @@
 # Guitar Synth Log
 
-###### Blokschema:
+###### Sound test of the first version
+
+
+[![guitarSynthMovie](https://bramgiesen.com/images/guitarMovieIMG.png)](https://vimeo.com/275585891)
+
+
+###### block diagram:
 
 <img src="images/BlokSchemaV2.jpg">
 
@@ -8,10 +14,21 @@
 <img src="images/flowChart.jpg">
 
 
+
+<!-- Before I made this plugin I have made a smaller plugin to get acquainted with Juce. This plugin can be found <a href="https://bramgiesen.com/ringmodplugin.html">here</a> -->
+
 Voordat ik aan deze plugin ben begonnen heb ik eerst een kleinere plugin gemaakt
  <a href="https://bramgiesen.com/ringmodplugin.html">(hier te vinden)</a> om mij te verdiepen in JUCE en al wat zaken te testen zoals het implementeren van LFO's.
 
 ###### Filters:
+<!-- I have used Biquad filters for the vocoder. This vocoder has 15 bandpass filters that are used in combination with the envelope follower to measure the power within each band.
+
+I began the filter design with a mono filter. Because I wanted to use a lot of filters with the option to use it with a stereo signal I adjusted my code a bit and used 3d vectors as buffers for the filter.
+
+Because I use the 3d vectors I don't need to filter objects for a stereo channel but just one, which is convenient since I use a lot of filters. Each 3d vector contains 2 vectors for the channels and each of these channel vectors contain two vectors for the delay buffer of the filter. -->
+
+
+
 Voor de filter implementatie heb ik gekozen voor een biquad filter, direct form II. Deze filter werkt met twee delaybuffers. Voor de buffers gebruik ik een aantal vectors. Ik ben begonnen met een mono implementatie, dus waarbij je voor ieder stereo-kanaal twee buffers moest aanmaken. Nadat ik dit werkend had ben ik gaan nadenken hoe ik dit efficiënter kon maken.
 
 Toen kwam ik op het idee om 3d vectors te gebruiken. Ik heb 1 vector aangemaakt waarin 2 vectoren zitten voor de kanalen(stereo) deze vectoren bevatten ieder weer twee vectoren voor de delayBuffers.
@@ -21,17 +38,22 @@ channelBuffers[channel][delayBuffer][delay];
 
 ```
 
+<!-- When I first implemented the filters I used double filtered the signal(so I had 60 filters in total) but this made the sound very soft and it didn't made it sound better so I reduced the filters to 30 filters. -->
+
 Ik had eerst een implementatie waarbij het geluid dubbel werd gefilterd, hierdoor werd het erg zacht, hierdoor moest ik het heel erg versterken, uiteindelijk heb ik ervoor gekozen om minder filters te gebruiken en nu klinkt het harder en ook een stuk beter.
 
 ###### for loops:
 
 Omdat er een behoorlijk aantal filters in een vocoder zitten, 30 stuks, heb ik mijn programma zo geschreven dat deze worden aangemaakt en ook binnen de process-functie heb ik veel for loops gebruikt om de code op deze manier flexibel en overzichtelijk te houden.
 
+
+<!-- To make my project more flexible and keep it clean I used for loops to create the filters. I also used for loops to send the samples to the filters in the audio process function. -->
+
 ```
-bandPassFilters = new Biquad*[60];
+bandPassFilters = new Biquad*[30];
 
 
-for (int i = 0; i < 60; i++){
+for (int i = 0; i < 30; i++){
     bandPassFilters[i]
     = new Biquad(1.0, filterFreqs[i % 15]
       / lastSampleRate, 40.0);
@@ -40,6 +62,8 @@ for (int i = 0; i < 60; i++){
 ```
 
 ```
+//process function
+
 for (int filterIndex = 0; filterIndex < 15; filterIndex++){
              float filterSignal = bandPassFilters
              [filterIndex + 15]->process(channel, synthSample);
