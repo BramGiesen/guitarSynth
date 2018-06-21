@@ -159,7 +159,7 @@ void GuitarSynth_2AudioProcessor::prepareToPlay (double sampleRate, int samplesP
     int numberOfBiquads = 30;
     bandPassFilters = new Biquad*[numberOfBiquads];
 
-    //create 60 bandpasses 4 * 15 different frequency's
+    //create 30 bandpasses, 2 * 15 different frequency's
     for (int i = 0; i < numberOfBiquads; i++){
         bandPassFilters[i] = new Biquad(1.0, filterFreqs[i % 15] / lastSampleRate, 46.0);
     }
