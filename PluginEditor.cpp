@@ -1,47 +1,3 @@
-///*
-// ==============================================================================
-//
-// This file was auto-generated!
-//
-// It contains the basic framework code for a JUCE plugin editor.
-//
-// ==============================================================================
-// */
-//
-//#include "PluginProcessor.h"
-//#include "PluginEditor.h"
-//
-////==============================================================================
-//GuitarSynth_2AudioProcessorEditor::GuitarSynth_2AudioProcessorEditor (GuitarSynth_2AudioProcessor& p)
-//: AudioProcessorEditor (&p), processor (p)
-//{
-//    // Make sure that before the constructor has finished, you've set the
-//    // editor's size to whatever you need it to be.
-//    setSize (400, 300);
-//}
-//
-//GuitarSynth_2AudioProcessorEditor::~GuitarSynth_2AudioProcessorEditor()
-//{
-//}
-//
-////==============================================================================
-//void GuitarSynth_2AudioProcessorEditor::paint (Graphics& g)
-//{
-//    // (Our component is opaque, so we must completely fill the background with a solid colour)
-//    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-//
-//    g.setColour (Colours::white);
-//    g.setFont (15.0f);
-//    g.drawFittedText ("Hello World!", getLocalBounds(), Justification::centred, 1);
-//}
-//
-//void GuitarSynth_2AudioProcessorEditor::resized()
-//{
-//    // This is generally where you'll want to lay out the positions of any
-//    // subcomponents in your editor..
-//}
-
-
 
 /*
  ==============================================================================
@@ -59,8 +15,7 @@
 #include <iomanip>
 
 //==============================================================================
-// This is a handy slider subclass that controls an AudioProcessorParameter
-// (may move this class into the library itself at some point in the future..)
+// This is a handy slider subclass(class is from JUCE example) that controls an AudioProcessorParameter
 class GuitarSynth_2AudioProcessorEditor::ParameterSlider   : public Slider,
 private Timer
 {
@@ -249,10 +204,12 @@ void GuitarSynth_2AudioProcessorEditor::paint (Graphics& g)
     g.setColour(Colours::darkgrey);
     g.fillAll();
 
+    
+    //drawlines to 'divide' the interface
     auto rect = getLocalBounds();
     g.setColour(Colours::dimgrey);
     g.drawLine(0, 54, getWidth(), 54, 20);
-
+    
     do {
         for(int i = 0; i < 9; i++){
              g.drawLine(getWidth()/9 * i, getHeight()-200, getWidth()/9 * i , getHeight(), 20);
@@ -337,6 +294,8 @@ void GuitarSynth_2AudioProcessorEditor::updateTrackProperties ()
 
 //==============================================================================
 
+
+//function that sends the selected box item to processor(see pluginprocessor.cpp)
 void GuitarSynth_2AudioProcessorEditor::comboBoxChanged (ComboBox* box)
 {
     auto index = box->getSelectedItemIndex();
